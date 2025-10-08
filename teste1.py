@@ -1,4 +1,5 @@
 import streamlit as st
+import random
 
 # Função para calcular o signo
 def calcula_signo(dia, mes):
@@ -40,7 +41,7 @@ mes = st.number_input("Mês do nascimento:", min_value=1, max_value=12, step=1)
 # Opções na barra lateral
 opcao = st.sidebar.selectbox(
     "O que você gostaria de ver?",
-    ("Transformações do nome", "Número de letras", "Signo")
+    ("Transformações do nome", "Número de letras", "Signo", "Perguntas Verdadeiro ou Falso")
 )
 
 # Exibição com base na seleção
@@ -56,3 +57,17 @@ if opcao == "Signo" and dia and mes:
     signo, frase = calcula_signo(dia, mes)
     st.write(f"Seu signo é: {signo}")
     st.write(f"Frase do signo: {frase}")
+
+if opcao == "Perguntas Verdadeiro ou Falso":
+    perguntas = [
+        ("Seu nome contém a letra 'a'.", 'a' in nome.lower()),
+        ("Seu signo é Áries.", calcula_signo(dia, mes)[0] == "Áries ♈")
+    ]
+    for pergunta, resposta_correta in perguntas:
+        resposta_usuario = st.radio(pergunta, ('Verdadeiro', 'Falso'))
+        if resposta_usuario == 'Verdadeiro' and resposta_correta:
+            st.write("✅ Correto!")
+        elif resposta_usuario == 'Falso' and not resposta_correta:
+            st.write("✅ Correto!")
+        else:
+            st.write("❌ Errado!")
