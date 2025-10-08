@@ -1,42 +1,40 @@
 import streamlit as st
 
-st.title("Transformador de Nome e Signo")
-
-# Campo para nome
-nome = st.text_input("Digite seu nome:")
-
-# Campo para aniversário (dia e mês)
-dia = st.number_input("Dia do nascimento:", min_value=1, max_value=31, step=1)
-mes = st.number_input("Mês do nascimento:", min_value=1, max_value=12, step=1)
-
-# Função para calcular signo
+# Função para calcular o signo
 def calcula_signo(dia, mes):
     if (mes == 3 and dia >= 21) or (mes == 4 and dia <= 20):
-        return "Áries ♈"
+        return "Áries ♈", "A coragem é meu sobrenome."
     elif (mes == 4 and dia >= 21) or (mes == 5 and dia <= 20):
-        return "Touro ♉"
+        return "Touro ♉", "Aprecie as pequenas coisas."
     elif (mes == 5 and dia >= 21) or (mes == 6 and dia <= 20):
-        return "Gêmeos ♊"
+        return "Gêmeos ♊", "Comunicativo e adaptável."
     elif (mes == 6 and dia >= 21) or (mes == 7 and dia <= 22):
-        return "Câncer ♋"
+        return "Câncer ♋", "Lar, doce lar."
     elif (mes == 7 and dia >= 23) or (mes == 8 and dia <= 22):
-        return "Leão ♌"
+        return "Leão ♌", "Brilho e confiança."
     elif (mes == 8 and dia >= 23) or (mes == 9 and dia <= 22):
-        return "Virgem ♍"
+        return "Virgem ♍", "Organização e eficiência."
     elif (mes == 9 and dia >= 23) or (mes == 10 and dia <= 22):
-        return "Libra ♎"
+        return "Libra ♎", "Busca por harmonia."
     elif (mes == 10 and dia >= 23) or (mes == 11 and dia <= 21):
-        return "Escorpião ♏"
+        return "Escorpião ♏", "Intensidade e paixão."
     elif (mes == 11 and dia >= 22) or (mes == 12 and dia <= 21):
-        return "Sagitário ♐"
+        return "Sagitário ♐", "Aventura e liberdade."
     elif (mes == 12 and dia >= 22) or (mes == 1 and dia <= 19):
-        return "Capricórnio ♑"
+        return "Capricórnio ♑", "Disciplina e responsabilidade."
     elif (mes == 1 and dia >= 20) or (mes == 2 and dia <= 18):
-        return "Aquário ♒"
+        return "Aquário ♒", "Inovação e originalidade."
     elif (mes == 2 and dia >= 19) or (mes == 3 and dia <= 20):
-        return "Peixes ♓"
+        return "Peixes ♓", "Sensibilidade e empatia."
     else:
-        return "Data inválida"
+        return "Data inválida", ""
+
+# Interface do usuário
+st.title("Transformador de Nome e Signo")
+
+nome = st.text_input("Digite seu nome:")
+dia = st.number_input("Dia do nascimento:", min_value=1, max_value=31, step=1)
+mes = st.number_input("Mês do nascimento:", min_value=1, max_value=12, step=1)
 
 if nome:
     st.write("Minúsculas:", nome.lower())
@@ -45,5 +43,6 @@ if nome:
     st.write(f"Número de letras: {len(nome)}")
 
 if dia and mes:
-    signo = calcula_signo(dia, mes)
+    signo, frase = calcula_signo(dia, mes)
     st.write(f"Seu signo é: {signo}")
+    st.write(f"Frase do signo: {frase}")
