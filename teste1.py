@@ -2,4 +2,4 @@ import streamlit as st
 
 nome = st.text_input("digite seu nome:")
 if nome:
-    st.write(nome.upper())
+    st.write(nome.lower())
