@@ -19,3 +19,5 @@ def main():
         # Para limpar o input, usamos a função experimental set_value
         st.experimental_rerun()
 
+if __name__ == "__main__":
+    main()
