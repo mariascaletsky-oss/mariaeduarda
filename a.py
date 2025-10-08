@@ -6,17 +6,16 @@ case_option = st.sidebar.selectbox(
     ("AED", "DI", "OEDF", "PMA", "PROG", "SJ", "TGDC")
 )
 
-professor = st.sidebar.checkbox("Mostrar nome do professor", value=True)
-show_length = st.sidebar.checkbox("Mostrar número de caracteres", value=True)
+autor = st.sidebar.checkbox("Mostrar nome do autor", value=True)
+ano de publicação = st.sidebar.checkbox("Mostrar ano de publicação", value=True)
 show_emoji = st.sidebar.checkbox("Mostrar emoji com base no humor")
 
 st.title("📝 Formatação de Nome")
 
-nome = st.text_input("Digite seu nome:")
+aula = st.text_input("Digite número da aula:")
 
 if nome:
-    # Formata o nome de acordo com a escolha do usuário
-    if case_option == "Minúsculas":
+    if case_option == "AED":
         nome_formatado = nome.lower()
     elif case_option == "Maiúsculas":
         nome_formatado = nome.upper()
