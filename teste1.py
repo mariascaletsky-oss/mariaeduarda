@@ -1,5 +1,5 @@
 import streamlit as st
 
-nome = st.input_box("digite seu nome:")
+nome = st.text_input("digite seu nome:")
 if nome:
     st.write(nome.upper())
