@@ -7,7 +7,7 @@ case_option = st.sidebar.selectbox(
 )
 
 autor = st.sidebar.checkbox("Mostrar nome do autor", value=True)
-ano de publicação = st.sidebar.checkbox("Mostrar ano de publicação", value=True)
+ano = st.sidebar.checkbox("Mostrar ano de publicação", value=True)
 show_emoji = st.sidebar.checkbox("Mostrar emoji com base no humor")
 
 st.title("📝 Formatação de Nome")
