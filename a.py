@@ -6,11 +6,10 @@ case_option = st.sidebar.selectbox(
     ("AED", "DI", "OEDF", "PMA", "PROG", "SJ", "TGDC")
 )
 
-show_greeting = st.sidebar.checkbox("Mostrar saudação personalizada", value=True)
+professor = st.sidebar.checkbox("Mostrar nome do professor", value=True)
 show_length = st.sidebar.checkbox("Mostrar número de caracteres", value=True)
 show_emoji = st.sidebar.checkbox("Mostrar emoji com base no humor")
 
-# Main interface
 st.title("📝 Formatação de Nome")
 
 nome = st.text_input("Digite seu nome:")
