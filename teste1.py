@@ -32,15 +32,27 @@ def calcula_signo(dia, mes):
 # Interface do usuário
 st.title("Transformador de Nome e Signo")
 
+# Inputs principais
 nome = st.text_input("Digite seu nome:")
 dia = st.number_input("Dia do nascimento:", min_value=1, max_value=31, step=1)
 mes = st.number_input("Mês do nascimento:", min_value=1, max_value=12, step=1)
 
-if nome:
+# Opções na barra lateral
+opcao = st.sidebar.selectbox(
+    "O que você gostaria de ver?",
+    ("Transformações do nome", "Número de letras", "Signo")
+)
+
+# Exibição com base na seleção
+if opcao == "Transformações do nome" and nome:
+    st.write("Minúsculas:", nome.lower())
+    st.write("Maiúsculas:", nome.upper())
     st.write("Capitalizado:", nome.capitalize())
+
+if opcao == "Número de letras" and nome:
     st.write(f"Número de letras: {len(nome)}")
 
-if dia and mes:
+if opcao == "Signo" and dia and mes:
     signo, frase = calcula_signo(dia, mes)
     st.write(f"Seu signo é: {signo}")
     st.write(f"Frase do signo: {frase}")
