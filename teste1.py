@@ -37,8 +37,6 @@ dia = st.number_input("Dia do nascimento:", min_value=1, max_value=31, step=1)
 mes = st.number_input("Mês do nascimento:", min_value=1, max_value=12, step=1)
 
 if nome:
-    st.write("Minúsculas:", nome.lower())
-    st.write("Maiúsculas:", nome.upper())
     st.write("Capitalizado:", nome.capitalize())
     st.write(f"Número de letras: {len(nome)}")
 
