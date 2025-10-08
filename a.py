@@ -1,10 +1,9 @@
 import streamlit as st
 
-# Sidebar for options
-st.sidebar.title("🔧 Configurações")
+st.sidebar.title("📚 Aulas")
 case_option = st.sidebar.selectbox(
-    "Escolha o formato do nome:",
-    ("Minúsculas", "Maiúsculas", "Título")
+    "Escolha uma disciplina:",
+    ("AED", "DI", "OEDF", "PMA", "PROG", "SJ", "TGDC")
 )
 
 show_greeting = st.sidebar.checkbox("Mostrar saudação personalizada", value=True)
