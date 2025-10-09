@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 
 # ---------- FUNÇÃO ----------
 def calcula_signo(dia, mes):
@@ -84,7 +85,6 @@ nomes_cores = {
 # ---------- SESSION STATE ----------
 if "pagina" not in st.session_state:
     st.session_state.pagina = "perguntas"
-
 if "nome" not in st.session_state:
     st.session_state.nome = ""
 if "dia" not in st.session_state:
@@ -99,10 +99,18 @@ if st.session_state.pagina == "perguntas":
     st.session_state.dia = st.number_input("Dia do nascimento:", min_value=1, max_value=31, step=1, value=st.session_state.dia)
     st.session_state.mes = st.number_input("Mês do nascimento:", min_value=1, max_value=12, step=1, value=st.session_state.mes)
     
-    if st.button("Ver resultado") and st.session_state.nome and st.session_state.dia and st.session_state.mes:
-        st.session_state.pagina = "resultado"
+    if st.button("Calcular meu signo") and st.session_state.nome and st.session_state.dia and st.session_state.mes:
+        st.session_state.pagina = "carregando"
 
-# ---------- PAGINA 2: RESULTADO ----------
+# ---------- PAGINA 2: CARREGANDO ----------
+elif st.session_state.pagina == "carregando":
+    st.title("🔮 Calculando seu signo...")
+    st.info("Aguarde um momento enquanto descobrimos seu signo...")
+    time.sleep(2)  # simula carregamento
+    st.session_state.pagina = "resultado"
+    st.experimental_rerun()
+
+# ---------- PAGINA 3: RESULTADO ----------
 elif st.session_state.pagina == "resultado":
     nome = st.session_state.nome.title()
     dia = st.session_state.dia
