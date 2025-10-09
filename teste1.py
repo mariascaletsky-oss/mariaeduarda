@@ -1,6 +1,6 @@
 import streamlit as st
 
-# Função para calcular o signo
+# ---------- FUNÇÕES ----------
 def calcula_signo(dia, mes):
     if (mes == 3 and dia >= 21) or (mes == 4 and dia <= 20):
         return "Áries ♈", "A coragem é meu sobrenome."
@@ -29,7 +29,7 @@ def calcula_signo(dia, mes):
     else:
         return "Data inválida", ""
 
-# Famosos americanos (sem imagem)
+# Dicionários
 famosos = {
     "Áries ♈": "Lady Gaga",
     "Touro ♉": "Dwayne 'The Rock' Johnson",
@@ -45,36 +45,41 @@ famosos = {
     "Peixes ♓": "Rihanna"
 }
 
-# Tradução dos meses
 meses = {
     1: "janeiro", 2: "fevereiro", 3: "março", 4: "abril",
     5: "maio", 6: "junho", 7: "julho", 8: "agosto",
     9: "setembro", 10: "outubro", 11: "novembro", 12: "dezembro"
 }
 
-# ---------- SIDEBAR INTERATIVA ----------
-st.sidebar.title("🔮 Menu Zodiacal")
-st.sidebar.markdown("Escolha uma opção divertida para explorar seu signo:")
+# ---------- SIDEBAR ----------
+st.sidebar.title("🎨 Tema do App")
+tema = st.sidebar.selectbox("Escolha o tema:", ["Claro 🌞", "Escuro 🌙", "Colorido ✨"])
 
-# Tema do app
-tema = st.sidebar.selectbox("Escolha o tema do app:", ["🌞 Claro", "🌙 Escuro", "✨ Colorido"])
-if tema == "🌞 Claro":
-    st.sidebar.success("Você escolheu o tema claro! ☀️")
-elif tema == "🌙 Escuro":
-    st.sidebar.info("Você escolheu o tema escuro! 🌙")
-else:
-    st.sidebar.warning("Você escolheu o tema colorido! 🌈")
-
-# Curiosidades rápidas
-curiosidade = st.sidebar.checkbox("Mostrar curiosidade do signo")
-if curiosidade:
-    st.sidebar.write("💫 Dica: Cada signo tem características únicas! Explore para descobrir mais.")
-
-# Atalhos
-st.sidebar.markdown("---")
-st.sidebar.markdown("Atalhos rápidos:")
-st.sidebar.button("Transformações do nome")
-st.sidebar.button("Número de letras")
+# CSS para tema
+if tema == "Claro 🌞":
+    st.markdown(
+        """
+        <style>
+        .main {background-color: #ffffff; color: #000000;}
+        </style>
+        """, unsafe_allow_html=True
+    )
+elif tema == "Escuro 🌙":
+    st.markdown(
+        """
+        <style>
+        .main {background-color: #0e1117; color: #ffffff;}
+        </style>
+        """, unsafe_allow_html=True
+    )
+else:  # Colorido
+    st.markdown(
+        """
+        <style>
+        .main {background-color: #fff0f5; color: #800080;}
+        </style>
+        """, unsafe_allow_html=True
+    )
 
 # ---------- INTERFACE PRINCIPAL ----------
 st.title("✨ Descubra seu Signo ✨")
@@ -100,7 +105,6 @@ if nome and dia > 0 and mes > 0:
             nome_famoso = famosos.get(signo, "Desconhecido")
             st.info(f"Um famoso de {signo} é **{nome_famoso}** 🌟")
 
-        # Nova pergunta
         nova_pergunta = st.radio("Quer responder uma última pergunta divertida?", ("Não", "Sim"))
         if nova_pergunta == "Sim":
             st.write("👉 Aqui você pode adicionar o que quiser depois!")
