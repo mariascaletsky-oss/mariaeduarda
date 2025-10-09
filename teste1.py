@@ -101,6 +101,7 @@ if st.session_state.pagina == "perguntas":
     
     if st.button("Calcular meu signo") and st.session_state.nome and st.session_state.dia and st.session_state.mes:
         st.session_state.pagina = "carregando"
+        st.experimental_rerun()  # força atualizar a página
 
 # ---------- PAGINA 2: CARREGANDO ----------
 elif st.session_state.pagina == "carregando":
@@ -109,7 +110,10 @@ elif st.session_state.pagina == "carregando":
     for i in range(100):
         time.sleep(0.02)
         progress.progress(i + 1)
-    st.session_state.pagina = "resultado"
+    st.write("Clique abaixo para ver o resultado!")
+    if st.button("Ver Resultado"):
+        st.session_state.pagina = "resultado"
+        st.experimental_rerun()
 
 # ---------- PAGINA 3: RESULTADO ----------
 elif st.session_state.pagina == "resultado":
@@ -139,3 +143,4 @@ elif st.session_state.pagina == "resultado":
     
     if st.button("Voltar para perguntas"):
         st.session_state.pagina = "perguntas"
+        st.experimental_rerun()
