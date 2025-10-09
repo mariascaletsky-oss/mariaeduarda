@@ -1,6 +1,5 @@
 import streamlit as st
 
-# ---------- FUNÇÃO ----------
 def calcula_signo(dia, mes):
     if (mes == 3 and dia >= 21) or (mes == 4 and dia <= 20):
         return "Áries ♈", "A coragem é meu sobrenome."
@@ -29,7 +28,6 @@ def calcula_signo(dia, mes):
     else:
         return "Data inválida", ""
 
-# ---------- DADOS ----------
 famosos = {
     "Áries ♈": "Lady Gaga",
     "Touro ♉": "Dwayne 'The Rock' Johnson",
@@ -81,7 +79,6 @@ nomes_cores = {
     "Peixes ♓": "Roxo Médio"
 }
 
-# ---------- SESSION STATE ----------
 if "pagina" not in st.session_state:
     st.session_state.pagina = "perguntas"
 
@@ -92,7 +89,6 @@ if "dia" not in st.session_state:
 if "mes" not in st.session_state:
     st.session_state.mes = 0
 
-# ---------- PAGINA 1: PERGUNTAS ----------
 if st.session_state.pagina == "perguntas":
     st.title("✨ Descubra seu Signo ✨")
     st.session_state.nome = st.text_input("Digite seu nome:", st.session_state.nome)
@@ -102,7 +98,6 @@ if st.session_state.pagina == "perguntas":
     if st.button("Ver resultado") and st.session_state.nome and st.session_state.dia and st.session_state.mes:
         st.session_state.pagina = "resultado"
 
-# ---------- PAGINA 2: RESULTADO ----------
 elif st.session_state.pagina == "resultado":
     nome = st.session_state.nome.title()
     dia = st.session_state.dia
