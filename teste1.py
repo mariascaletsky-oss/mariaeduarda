@@ -45,7 +45,7 @@ meses = {
     12: "dezembro"
 }
 
-# Famosos americanos (sem imagem)
+# Famosos americanos
 famosos = {
     "Áries ♈": "Lady Gaga",
     "Touro ♉": "Dwayne 'The Rock' Johnson",
