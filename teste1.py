@@ -29,20 +29,36 @@ def calcula_signo(dia, mes):
     else:
         return "Data inválida", ""
 
-# Famosos americanos com imagens (links diretos Imgur)
+# Dicionário para converter número do mês em nome
+meses = {
+    1: "janeiro",
+    2: "fevereiro",
+    3: "março",
+    4: "abril",
+    5: "maio",
+    6: "junho",
+    7: "julho",
+    8: "agosto",
+    9: "setembro",
+    10: "outubro",
+    11: "novembro",
+    12: "dezembro"
+}
+
+# Famosos americanos (sem imagem)
 famosos = {
-    "Áries ♈": ("Lady Gaga", "https://imgur.com/a/AsMAk0H"),
-    "Touro ♉": ("Dwayne 'The Rock' Johnson", "https://i.imgur.com/UC0QGxB.jpg"),
-    "Gêmeos ♊": ("Kanye West", "https://i.imgur.com/xK2xE2s.jpg"),
-    "Câncer ♋": ("Selena Gomez", "https://i.imgur.com/Y5dL6Ww.jpg"),
-    "Leão ♌": ("Jennifer Lopez", "https://i.imgur.com/8r9N8dB.jpg"),
-    "Virgem ♍": ("Beyoncé", "https://i.imgur.com/yHNmqjC.jpg"),
-    "Libra ♎": ("Kim Kardashian", "https://i.imgur.com/s8Ykt5Z.jpg"),
-    "Escorpião ♏": ("Leonardo DiCaprio", "https://i.imgur.com/1yXoSxW.jpg"),
-    "Sagitário ♐": ("Taylor Swift", "https://i.imgur.com/WxeK0Oa.jpg"),
-    "Capricórnio ♑": ("Michelle Obama", "https://i.imgur.com/fpDqhnx.jpg"),
-    "Aquário ♒": ("Oprah Winfrey", "https://i.imgur.com/YVhO0bC.jpg"),
-    "Peixes ♓": ("Rihanna", "https://i.imgur.com/1O8PQXk.jpg")
+    "Áries ♈": "Lady Gaga",
+    "Touro ♉": "Dwayne 'The Rock' Johnson",
+    "Gêmeos ♊": "Kanye West",
+    "Câncer ♋": "Selena Gomez",
+    "Leão ♌": "Jennifer Lopez",
+    "Virgem ♍": "Beyoncé",
+    "Libra ♎": "Kim Kardashian",
+    "Escorpião ♏": "Leonardo DiCaprio",
+    "Sagitário ♐": "Taylor Swift",
+    "Capricórnio ♑": "Michelle Obama",
+    "Aquário ♒": "Oprah Winfrey",
+    "Peixes ♓": "Rihanna"
 }
 
 # Interface principal
@@ -57,9 +73,10 @@ mes = int(st.number_input("Mês do nascimento:", min_value=1, max_value=12, step
 if nome and dia > 0 and mes > 0:
     signo, frase = calcula_signo(dia, mes)
     nome_title = nome.title()  # Primeira letra maiúscula
-    
+
     if signo != "Data inválida":
-        st.write(f"Olá **{nome_title}**, seu aniversário é no dia **{dia} do {mes}**, então você é de **{signo}**.")
+        mes_nome = meses.get(mes, "mês inválido")
+        st.write(f"Olá **{nome_title}**, seu aniversário é no dia **{dia} de {mes_nome}**, então você é de **{signo}**.")
         
         conselho = st.radio("Gostaria de um conselho?", ("Não", "Sim"))
         if conselho == "Sim":
@@ -67,9 +84,7 @@ if nome and dia > 0 and mes > 0:
 
         famoso = st.radio("Gostaria de saber um famoso do seu signo?", ("Não", "Sim"))
         if famoso == "Sim":
-            nome_famoso, img_url = famosos.get(signo, ("Desconhecido", ""))
+            nome_famoso = famosos.get(signo, "Desconhecido")
             st.info(f"Um famoso de {signo} é **{nome_famoso}** 🌟")
-            if img_url:
-                st.image(img_url, width=300, caption=nome_famoso)
     else:
         st.error("Data inválida. Verifique o dia e o mês informados.")
