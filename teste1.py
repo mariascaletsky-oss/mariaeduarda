@@ -66,6 +66,21 @@ cores_signo = {
     "Peixes ♓": "#9370DB"
 }
 
+nomes_cores = {
+    "Áries ♈": "Laranja Vermelho",
+    "Touro ♉": "Verde Floresta",
+    "Gêmeos ♊": "Amarelo Ouro",
+    "Câncer ♋": "Azul Dodger",
+    "Leão ♌": "Laranja",
+    "Virgem ♍": "Verde Limão",
+    "Libra ♎": "Rosa Forte",
+    "Escorpião ♏": "Vermelho Escuro",
+    "Sagitário ♐": "Laranja Escuro",
+    "Capricórnio ♑": "Cinza Escuro",
+    "Aquário ♒": "Turquesa",
+    "Peixes ♓": "Roxo Médio"
+}
+
 # ---------- SIDEBAR ----------
 st.sidebar.title("🎨 Tema do App")
 tema = st.sidebar.selectbox("Escolha o tema:", ["Claro 🌞", "Colorido ✨"])
@@ -99,13 +114,14 @@ if nome and dia > 0 and mes > 0:
     if signo != "Data inválida":
         mes_nome = meses.get(mes, "mês desconhecido")
         cor_texto = cores_signo.get(signo, "#800080") if tema == "Colorido ✨" else "#000000"
+        nome_cor = nomes_cores.get(signo, "Cor Desconhecida")
         
         st.markdown(
             f"<h3 style='color:{cor_texto}'>Olá <b>{nome_title}</b>, seu aniversário é no dia <b>{dia} de {mes_nome}</b>, então você é de <b>{signo}</b>.</h3>",
             unsafe_allow_html=True
         )
         if tema == "Colorido ✨":
-            st.write(f"A cor associada ao seu signo é: **{cor_texto}**")
+            st.write(f"A cor associada ao seu signo é: **{nome_cor}** ({cor_texto})")
         
         conselho = st.radio("Gostaria de um conselho?", ("Não", "Sim"))
         if conselho == "Sim":
