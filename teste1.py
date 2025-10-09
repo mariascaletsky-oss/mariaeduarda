@@ -78,8 +78,7 @@ if tema == "Claro 🌞":
         .stApp * {color: #000000 !important; font-family: 'Arial', sans-serif !important;}
         </style>
     """, unsafe_allow_html=True)
-
-else:  # Colorido
+else:
     st.markdown("""
         <style>
         .stApp {background-color: #fff0f5;}
@@ -99,15 +98,14 @@ if nome and dia > 0 and mes > 0:
     
     if signo != "Data inválida":
         mes_nome = meses.get(mes, "mês desconhecido")
+        cor_texto = cores_signo.get(signo, "#800080") if tema == "Colorido ✨" else "#000000"
         
+        st.markdown(
+            f"<h3 style='color:{cor_texto}'>Olá <b>{nome_title}</b>, seu aniversário é no dia <b>{dia} de {mes_nome}</b>, então você é de <b>{signo}</b>.</h3>",
+            unsafe_allow_html=True
+        )
         if tema == "Colorido ✨":
-            cor_texto = cores_signo.get(signo, "#800080")
-            st.markdown(
-                f"<h3 style='color:{cor_texto}'>Olá <b>{nome_title}</b>, seu aniversário é no dia <b>{dia} de {mes_nome}</b>, então você é de <b>{signo}</b>.</h3>",
-                unsafe_allow_html=True
-            )
-        else:
-            st.write(f"Olá **{nome_title}**, seu aniversário é no dia **{dia} de {mes_nome}**, então você é de **{signo}**.")
+            st.write(f"A cor associada ao seu signo é: **{cor_texto}**")
         
         conselho = st.radio("Gostaria de um conselho?", ("Não", "Sim"))
         if conselho == "Sim":
