@@ -29,7 +29,7 @@ def calcula_signo(dia, mes):
     else:
         return "Data inválida", ""
 
-# Dicionários
+# Famosos
 famosos = {
     "Áries ♈": "Lady Gaga",
     "Touro ♉": "Dwayne 'The Rock' Johnson",
@@ -55,31 +55,25 @@ meses = {
 st.sidebar.title("🎨 Tema do App")
 tema = st.sidebar.selectbox("Escolha o tema:", ["Claro 🌞", "Escuro 🌙", "Colorido ✨"])
 
-# CSS para tema
+# CSS para aplicar o tema
 if tema == "Claro 🌞":
-    st.markdown(
-        """
+    st.markdown("""
         <style>
-        .main {background-color: #ffffff; color: #000000;}
+        .stApp {background-color: #ffffff; color: #000000;}
         </style>
-        """, unsafe_allow_html=True
-    )
+        """, unsafe_allow_html=True)
 elif tema == "Escuro 🌙":
-    st.markdown(
-        """
+    st.markdown("""
         <style>
-        .main {background-color: #0e1117; color: #ffffff;}
+        .stApp {background-color: #0e1117; color: #ffffff;}
         </style>
-        """, unsafe_allow_html=True
-    )
-else:  # Colorido
-    st.markdown(
-        """
+        """, unsafe_allow_html=True)
+else:
+    st.markdown("""
         <style>
-        .main {background-color: #fff0f5; color: #800080;}
+        .stApp {background-color: #fff0f5; color: #800080;}
         </style>
-        """, unsafe_allow_html=True
-    )
+        """, unsafe_allow_html=True)
 
 # ---------- INTERFACE PRINCIPAL ----------
 st.title("✨ Descubra seu Signo ✨")
@@ -104,9 +98,5 @@ if nome and dia > 0 and mes > 0:
         if famoso == "Sim":
             nome_famoso = famosos.get(signo, "Desconhecido")
             st.info(f"Um famoso de {signo} é **{nome_famoso}** 🌟")
-
-        nova_pergunta = st.radio("Quer responder uma última pergunta divertida?", ("Não", "Sim"))
-        if nova_pergunta == "Sim":
-            st.write("👉 Aqui você pode adicionar o que quiser depois!")
     else:
         st.error("Data inválida. Verifique o dia e o mês informados.")
