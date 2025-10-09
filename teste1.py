@@ -1,6 +1,6 @@
 import streamlit as st
 
-# ---------- FUNÇÕES ----------
+# ---------- FUNÇÃO ----------
 def calcula_signo(dia, mes):
     if (mes == 3 and dia >= 21) or (mes == 4 and dia <= 20):
         return "Áries ♈", "A coragem é meu sobrenome."
@@ -81,55 +81,50 @@ nomes_cores = {
     "Peixes ♓": "Roxo Médio"
 }
 
-# ---------- SIDEBAR ----------
-st.sidebar.title("🎨 Tema do App")
-tema = st.sidebar.selectbox("Escolha o tema:", ["Claro 🌞", "Colorido ✨"])
+# ---------- CONTROLE DE PAGINAS ----------
+if "pagina" not in st.session_state:
+    st.session_state.pagina = "perguntas"
 
-# ---------- CSS POR TEMA ----------
-if tema == "Claro 🌞":
-    st.markdown("""
-        <style>
-        .stApp {background-color: #ffffff; color: #000000;}
-        .stApp * {color: #000000 !important; font-family: 'Arial', sans-serif !important;}
-        </style>
-    """, unsafe_allow_html=True)
-else:
-    st.markdown("""
-        <style>
-        .stApp {background-color: #fff0f5;}
-        </style>
-    """, unsafe_allow_html=True)
-
-# ---------- INTERFACE PRINCIPAL ----------
-st.title("✨ Descubra seu Signo ✨")
-
-nome = st.text_input("Digite seu nome:")
-dia = int(st.number_input("Dia do nascimento:", min_value=1, max_value=31, step=1))
-mes = int(st.number_input("Mês do nascimento:", min_value=1, max_value=12, step=1))
-
-if nome and dia > 0 and mes > 0:
-    signo, frase = calcula_signo(dia, mes)
-    nome_title = nome.title()
+# ---------- PAGINA 1: PERGUNTAS ----------
+if st.session_state.pagina == "perguntas":
+    st.title("✨ Descubra seu Signo ✨")
+    nome = st.text_input("Digite seu nome:")
+    dia = st.number_input("Dia do nascimento:", min_value=1, max_value=31, step=1)
+    mes = st.number_input("Mês do nascimento:", min_value=1, max_value=12, step=1)
     
-    if signo != "Data inválida":
-        mes_nome = meses.get(mes, "mês desconhecido")
-        cor_texto = cores_signo.get(signo, "#800080") if tema == "Colorido ✨" else "#000000"
-        nome_cor = nomes_cores.get(signo, "Cor Desconhecida")
-        
-        st.markdown(
-            f"<h3 style='color:{cor_texto}'>Olá <b>{nome_title}</b>, seu aniversário é no dia <b>{dia} de {mes_nome}</b>, então você é de <b>{signo}</b>.</h3>",
-            unsafe_allow_html=True
-        )
-        if tema == "Colorido ✨":
-            st.write(f"A cor associada ao seu signo é: **{nome_cor}** ({cor_texto})")
-        
-        conselho = st.radio("Gostaria de um conselho?", ("Não", "Sim"))
-        if conselho == "Sim":
-            st.success(frase)
+    if st.button("Ver resultado") and nome and dia and mes:
+        st.session_state.nome = nome
+        st.session_state.dia = dia
+        st.session_state.mes = mes
+        st.session_state.pagina = "resultado"
+        st.experimental_rerun()
 
-        famoso = st.radio("Gostaria de saber um famoso do seu signo?", ("Não", "Sim"))
-        if famoso == "Sim":
-            nome_famoso = famosos.get(signo, "Desconhecido")
-            st.info(f"Um famoso de {signo} é **{nome_famoso}** 🌟")
-    else:
-        st.error("Data inválida. Verifique o dia e o mês informados.")
+# ---------- PAGINA 2: RESULTADO ----------
+if st.session_state.pagina == "resultado":
+    nome = st.session_state.nome.title()
+    dia = st.session_state.dia
+    mes = st.session_state.mes
+    mes_nome = meses.get(mes, "mês desconhecido")
+    
+    signo, frase = calcula_signo(dia, mes)
+    cor_texto = cores_signo.get(signo, "#800080")
+    nome_cor = nomes_cores.get(signo, "Cor Desconhecida")
+    
+    st.markdown(
+        f"<h3 style='color:{cor_texto}'>Olá <b>{nome}</b>, seu aniversário é no dia <b>{dia} de {mes_nome}</b>, então você é de <b>{signo}</b>.</h3>",
+        unsafe_allow_html=True
+    )
+    st.write(f"A cor associada ao seu signo é: **{nome_cor}** ({cor_texto})")
+    
+    conselho = st.radio("Gostaria de um conselho?", ("Não", "Sim"))
+    if conselho == "Sim":
+        st.success(frase)
+
+    famoso = st.radio("Gostaria de saber um famoso do seu signo?", ("Não", "Sim"))
+    if famoso == "Sim":
+        nome_famoso = famosos.get(signo, "Desconhecido")
+        st.info(f"Um famoso de {signo} é **{nome_famoso}** 🌟")
+    
+    if st.button("Voltar para perguntas"):
+        st.session_state.pagina = "perguntas"
+        st.experimental_rerun()
