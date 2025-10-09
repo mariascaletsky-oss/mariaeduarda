@@ -81,26 +81,29 @@ nomes_cores = {
     "Peixes ♓": "Roxo Médio"
 }
 
-# ---------- CONTROLE DE PAGINAS ----------
+# ---------- SESSION STATE ----------
 if "pagina" not in st.session_state:
     st.session_state.pagina = "perguntas"
+
+if "nome" not in st.session_state:
+    st.session_state.nome = ""
+if "dia" not in st.session_state:
+    st.session_state.dia = 0
+if "mes" not in st.session_state:
+    st.session_state.mes = 0
 
 # ---------- PAGINA 1: PERGUNTAS ----------
 if st.session_state.pagina == "perguntas":
     st.title("✨ Descubra seu Signo ✨")
-    nome = st.text_input("Digite seu nome:")
-    dia = st.number_input("Dia do nascimento:", min_value=1, max_value=31, step=1)
-    mes = st.number_input("Mês do nascimento:", min_value=1, max_value=12, step=1)
+    st.session_state.nome = st.text_input("Digite seu nome:", st.session_state.nome)
+    st.session_state.dia = st.number_input("Dia do nascimento:", min_value=1, max_value=31, step=1, value=st.session_state.dia)
+    st.session_state.mes = st.number_input("Mês do nascimento:", min_value=1, max_value=12, step=1, value=st.session_state.mes)
     
-    if st.button("Ver resultado") and nome and dia and mes:
-        st.session_state.nome = nome
-        st.session_state.dia = dia
-        st.session_state.mes = mes
+    if st.button("Ver resultado") and st.session_state.nome and st.session_state.dia and st.session_state.mes:
         st.session_state.pagina = "resultado"
-        st.experimental_rerun()
 
 # ---------- PAGINA 2: RESULTADO ----------
-if st.session_state.pagina == "resultado":
+elif st.session_state.pagina == "resultado":
     nome = st.session_state.nome.title()
     dia = st.session_state.dia
     mes = st.session_state.mes
@@ -127,4 +130,3 @@ if st.session_state.pagina == "resultado":
     
     if st.button("Voltar para perguntas"):
         st.session_state.pagina = "perguntas"
-        st.experimental_rerun()
