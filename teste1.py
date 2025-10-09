@@ -1,4 +1,4 @@
-\import streamlit as st
+import streamlit as st
 
 # Função para calcular o signo
 def calcula_signo(dia, mes):
