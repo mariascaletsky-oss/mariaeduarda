@@ -31,7 +31,7 @@ def calcula_signo(dia, mes):
 
 # Famosos americanos com imagens (links diretos Imgur)
 famosos = {
-    "Áries ♈": ("Lady Gaga", "https://i.imgur.com/ebqN4Hd.jpg"),
+    "Áries ♈": ("Lady Gaga", "https://imgur.com/a/AsMAk0H"),
     "Touro ♉": ("Dwayne 'The Rock' Johnson", "https://i.imgur.com/UC0QGxB.jpg"),
     "Gêmeos ♊": ("Kanye West", "https://i.imgur.com/xK2xE2s.jpg"),
     "Câncer ♋": ("Selena Gomez", "https://i.imgur.com/Y5dL6Ww.jpg"),
