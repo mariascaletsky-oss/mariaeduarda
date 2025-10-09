@@ -29,24 +29,24 @@ def calcula_signo(dia, mes):
     else:
         return "Data inválida", ""
 
-# Famosos americanos por signo
+# Dicionário com famosos e fotos
 famosos = {
-    "Áries ♈": "Lady Gaga",
-    "Touro ♉": "Dwayne 'The Rock' Johnson",
-    "Gêmeos ♊": "Kanye West",
-    "Câncer ♋": "Selena Gomez",
-    "Leão ♌": "Jennifer Lopez",
-    "Virgem ♍": "Beyoncé",
-    "Libra ♎": "Kim Kardashian",
-    "Escorpião ♏": "Leonardo DiCaprio",
-    "Sagitário ♐": "Taylor Swift",
-    "Capricórnio ♑": "Michelle Obama",
-    "Aquário ♒": "Oprah Winfrey",
-    "Peixes ♓": "Rihanna"
+    "Áries ♈": ("Lady Gaga", "https://upload.wikimedia.org/wikipedia/commons/5/5f/Lady_Gaga_interview_2021.jpg"),
+    "Touro ♉": ("Dwayne 'The Rock' Johnson", "https://upload.wikimedia.org/wikipedia/commons/f/f0/Dwayne_Johnson_2%2C_2013.jpg"),
+    "Gêmeos ♊": ("Kanye West", "https://upload.wikimedia.org/wikipedia/commons/d/d2/Kanye_West_at_the_2009_Tribeca_Film_Festival_%28cropped%29.jpg"),
+    "Câncer ♋": ("Selena Gomez", "https://upload.wikimedia.org/wikipedia/commons/3/34/Selena_Gomez_2021_2.jpg"),
+    "Leão ♌": ("Jennifer Lopez", "https://upload.wikimedia.org/wikipedia/commons/4/4e/Jennifer_Lopez_2019_2.jpg"),
+    "Virgem ♍": ("Beyoncé", "https://upload.wikimedia.org/wikipedia/commons/3/3e/Beyoncé_in_2023.jpg"),
+    "Libra ♎": ("Kim Kardashian", "https://upload.wikimedia.org/wikipedia/commons/3/31/Kim_Kardashian_2019.jpg"),
+    "Escorpião ♏": ("Leonardo DiCaprio", "https://upload.wikimedia.org/wikipedia/commons/2/2f/Leonardo_DiCaprio_2014.jpg"),
+    "Sagitário ♐": ("Taylor Swift", "https://upload.wikimedia.org/wikipedia/commons/f/f2/Taylor_Swift_2_-_2019_by_Glenn_Francis.jpg"),
+    "Capricórnio ♑": ("Michelle Obama", "https://upload.wikimedia.org/wikipedia/commons/3/32/Michelle_Obama_official_portrait_2013.jpg"),
+    "Aquário ♒": ("Oprah Winfrey", "https://upload.wikimedia.org/wikipedia/commons/8/81/Oprah_in_2014.jpg"),
+    "Peixes ♓": ("Rihanna", "https://upload.wikimedia.org/wikipedia/commons/9/9f/Rihanna_Fenty_2018.png")
 }
 
 # Interface principal
-st.title("Descubra seu Signo 🌟")
+st.title("✨ Descubra seu Signo ✨")
 
 # Entradas do usuário
 nome = st.text_input("Digite seu nome:")
@@ -67,6 +67,9 @@ if nome and dia > 0 and mes > 0:
 
         famoso = st.radio("Gostaria de saber um famoso do seu signo?", ("Não", "Sim"))
         if famoso == "Sim":
-            st.info(f"Um famoso de {signo} é **{famosos.get(signo, 'desconhecido')}** 🌟")
+            nome_famoso, img_url = famosos.get(signo, ("Desconhecido", ""))
+            st.info(f"Um famoso de {signo} é **{nome_famoso}** 🌟")
+            if img_url:
+                st.image(img_url, width=300, caption=nome_famoso)
     else:
         st.error("Data inválida. Verifique o dia e o mês informados.")
