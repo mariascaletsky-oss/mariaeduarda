@@ -29,7 +29,7 @@ def calcula_signo(dia, mes):
     else:
         return "Data inválida", ""
 
-# Famosos
+# ---------- DADOS ----------
 famosos = {
     "Áries ♈": "Lady Gaga",
     "Touro ♉": "Dwayne 'The Rock' Johnson",
@@ -55,23 +55,49 @@ meses = {
 st.sidebar.title("🎨 Tema do App")
 tema = st.sidebar.selectbox("Escolha o tema:", ["Claro 🌞", "Escuro 🌙", "Colorido ✨"])
 
-# CSS para aplicar o tema
+# ---------- CSS POR TEMA ----------
 if tema == "Claro 🌞":
     st.markdown("""
         <style>
-        .stApp {background-color: #ffffff; color: #000000;}
+        .stApp {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        .stApp * {
+            color: #000000 !important;
+            font-family: 'Arial', sans-serif !important;
+        }
         </style>
         """, unsafe_allow_html=True)
+
 elif tema == "Escuro 🌙":
     st.markdown("""
         <style>
-        .stApp {background-color: #0e1117; color: #ffffff;}
+        .stApp {
+            background-color: #0e1117;
+            color: #ffffff;
+        }
+        .stApp * {
+            color: #ffffff !important;
+            font-family: 'Arial', sans-serif !important;
+        }
+        .stTextInput, .stNumberInput, .stRadio {
+            color: #000000 !important;
+        }
         </style>
         """, unsafe_allow_html=True)
-else:
+
+else:  # Colorido
     st.markdown("""
         <style>
-        .stApp {background-color: #fff0f5; color: #800080;}
+        .stApp {
+            background-color: #fff0f5;
+            color: #800080;
+        }
+        .stApp * {
+            color: #800080 !important;
+            font-family: 'Comic Sans MS', cursive, sans-serif !important;
+        }
         </style>
         """, unsafe_allow_html=True)
 
