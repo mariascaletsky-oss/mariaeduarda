@@ -34,14 +34,15 @@ st.title("Descubra seu Signo 🌟")
 
 # Entradas do usuário
 nome = st.text_input("Digite seu nome:")
-dia = st.number_input("Dia do nascimento:", min_value=1, max_value=31, step=1)
-mes = st.number_input("Mês do nascimento:", min_value=1, max_value=12, step=1)
+dia = int(st.number_input("Dia do nascimento:", min_value=1, max_value=31, step=1))
+mes = int(st.number_input("Mês do nascimento:", min_value=1, max_value=12, step=1))
 
 # Exibição principal
-if nome and dia and mes:
+if nome and dia > 0 and mes > 0:
     signo, frase = calcula_signo(dia, mes)
+    nome_title = nome.title()  # 🔹 Primeiras letras maiúsculas
     if signo != "Data inválida":
-        st.write(f"Olá **{nome}**, seu signo é **{signo}**.")
+        st.write(f"Olá **{nome_title}**, seu aniversário é no dia **{dia} do {mes}**, então você é de **{signo}**.")
         conselho = st.radio("Gostaria de um conselho?", ("Não", "Sim"))
         if conselho == "Sim":
             st.success(frase)
