@@ -63,11 +63,3 @@ if opcao == "Perguntas Verdadeiro ou Falso":
         ("Seu nome contém a letra 'a'.", 'a' in nome.lower()),
         ("Seu signo é Áries.", calcula_signo(dia, mes)[0] == "Áries ♈")
     ]
-    for pergunta, resposta_correta in perguntas:
-        resposta_usuario = st.radio(pergunta, ('Verdadeiro', 'Falso'))
-        if resposta_usuario == 'Verdadeiro' and resposta_correta:
-            st.write("✅ Correto!")
-        elif resposta_usuario == 'Falso' and not resposta_correta:
-            st.write("✅ Correto!")
-        else:
-            st.write("❌ Errado!")
