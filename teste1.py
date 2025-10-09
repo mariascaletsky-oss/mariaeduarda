@@ -29,6 +29,22 @@ def calcula_signo(dia, mes):
     else:
         return "Data inválida", ""
 
+# Dicionário de famosos americanos por signo
+famosos = {
+    "Áries ♈": "Lady Gaga",
+    "Touro ♉": "Adele",
+    "Gêmeos ♊": "Kanye West",
+    "Câncer ♋": "Tom Hanks",
+    "Leão ♌": "Jennifer Lopez",
+    "Virgem ♍": "Beyoncé",
+    "Libra ♎": "Will Smith",
+    "Escorpião ♏": "Leonardo DiCaprio",
+    "Sagitário ♐": "Taylor Swift",
+    "Capricórnio ♑": "Michelle Obama",
+    "Aquário ♒": "Oprah Winfrey",
+    "Peixes ♓": "Rihanna"
+}
+
 # Interface
 st.title("Descubra seu Signo 🌟")
 
@@ -46,5 +62,7 @@ if nome and dia > 0 and mes > 0:
         conselho = st.radio("Gostaria de um conselho?", ("Não", "Sim"))
         if conselho == "Sim":
             st.success(frase)
+            famoso = famosos.get(signo, "Desconhecido")
+            st.info(f"✨ Um famoso americano do seu signo é **{famoso}**!")
     else:
         st.error("Data inválida. Verifique o dia e o mês informados.")
