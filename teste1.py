@@ -51,55 +51,43 @@ meses = {
     9: "setembro", 10: "outubro", 11: "novembro", 12: "dezembro"
 }
 
+# Cores por signo
+cores_signo = {
+    "Áries ♈": "#FF4500",       # laranja vermelho
+    "Touro ♉": "#228B22",       # verde floresta
+    "Gêmeos ♊": "#FFD700",      # amarelo ouro
+    "Câncer ♋": "#1E90FF",      # azul dodger
+    "Leão ♌": "#FFA500",        # laranja
+    "Virgem ♍": "#32CD32",      # verde limão
+    "Libra ♎": "#FF69B4",       # rosa forte
+    "Escorpião ♏": "#8B0000",   # vermelho escuro
+    "Sagitário ♐": "#FF8C00",   # laranja escuro
+    "Capricórnio ♑": "#2F4F4F", # cinza escuro
+    "Aquário ♒": "#00CED1",     # azul turquesa
+    "Peixes ♓": "#9370DB"       # roxo médio
+}
+
 # ---------- SIDEBAR ----------
 st.sidebar.title("🎨 Tema do App")
-tema = st.sidebar.selectbox("Escolha o tema:", ["Claro 🌞", "Escuro 🌙", "Colorido ✨"])
+tema = st.sidebar.selectbox("Escolha o tema:", ["Claro 🌞", "Colorido ✨"])
 
 # ---------- CSS POR TEMA ----------
 if tema == "Claro 🌞":
     st.markdown("""
         <style>
-        .stApp {
-            background-color: #ffffff;
-            color: #000000;
-        }
-        .stApp * {
-            color: #000000 !important;
-            font-family: 'Arial', sans-serif !important;
-        }
+        .stApp {background-color: #ffffff; color: #000000;}
+        .stApp * {color: #000000 !important; font-family: 'Arial', sans-serif !important;}
         </style>
-        """, unsafe_allow_html=True)
-
-elif tema == "Escuro 🌙":
-    st.markdown("""
-        <style>
-        .stApp {
-            background-color: #0e1117;
-            color: #ffffff;
-        }
-        .stApp * {
-            color: #ffffff !important;
-            font-family: 'Arial', sans-serif !important;
-        }
-        .stTextInput, .stNumberInput, .stRadio {
-            color: #000000 !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 else:  # Colorido
+    # Para o tema colorido, a cor será definida depois do cálculo do signo
     st.markdown("""
         <style>
-        .stApp {
-            background-color: #fff0f5;
-            color: #800080;
-        }
-        .stApp * {
-            color: #800080 !important;
-            font-family: 'Comic Sans MS', cursive, sans-serif !important;
-        }
+        .stApp {background-color: #fff0f5;}
+        .stApp * {font-family: 'Comic Sans MS', cursive, sans-serif !important;}
         </style>
-        """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 # ---------- INTERFACE PRINCIPAL ----------
 st.title("✨ Descubra seu Signo ✨")
@@ -114,15 +102,7 @@ if nome and dia > 0 and mes > 0:
     
     if signo != "Data inválida":
         mes_nome = meses.get(mes, "mês desconhecido")
-        st.write(f"Olá **{nome_title}**, seu aniversário é no dia **{dia} de {mes_nome}**, então você é de **{signo}**.")
         
-        conselho = st.radio("Gostaria de um conselho?", ("Não", "Sim"))
-        if conselho == "Sim":
-            st.success(frase)
-
-        famoso = st.radio("Gostaria de saber um famoso do seu signo?", ("Não", "Sim"))
-        if famoso == "Sim":
-            nome_famoso = famosos.get(signo, "Desconhecido")
-            st.info(f"Um famoso de {signo} é **{nome_famoso}** 🌟")
-    else:
-        st.error("Data inválida. Verifique o dia e o mês informados.")
+        # Se tema colorido, aplica cor do signo
+        if tema == "Colorido ✨":
+            cor_texto = cores_signo.get(signo, "#80008
