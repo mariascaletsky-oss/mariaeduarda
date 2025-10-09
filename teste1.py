@@ -114,7 +114,7 @@ elif st.session_state.pagina == "resultado":
     )
     st.write(f"A cor associada ao seu signo é: **{nome_cor}** ({cor_texto})")
     
-    conselho = st.radio("Gostaria de um conselho?", ("Não", "Sim"))
+    conselho = st.radio("Gostaria de saber mais sobre seu signo?", ("Não", "Sim"))
     if conselho == "Sim":
         st.success(frase)
 
