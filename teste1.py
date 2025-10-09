@@ -29,15 +29,15 @@ def calcula_signo(dia, mes):
     else:
         return "Data inválida", ""
 
-# Dicionário de famosos americanos por signo
+# Famosos americanos por signo
 famosos = {
     "Áries ♈": "Lady Gaga",
-    "Touro ♉": "Adele",
+    "Touro ♉": "Dwayne 'The Rock' Johnson",
     "Gêmeos ♊": "Kanye West",
-    "Câncer ♋": "Tom Hanks",
+    "Câncer ♋": "Selena Gomez",
     "Leão ♌": "Jennifer Lopez",
     "Virgem ♍": "Beyoncé",
-    "Libra ♎": "Will Smith",
+    "Libra ♎": "Kim Kardashian",
     "Escorpião ♏": "Leonardo DiCaprio",
     "Sagitário ♐": "Taylor Swift",
     "Capricórnio ♑": "Michelle Obama",
@@ -45,7 +45,7 @@ famosos = {
     "Peixes ♓": "Rihanna"
 }
 
-# Interface
+# Interface principal
 st.title("Descubra seu Signo 🌟")
 
 # Entradas do usuário
@@ -56,13 +56,17 @@ mes = int(st.number_input("Mês do nascimento:", min_value=1, max_value=12, step
 # Exibição principal
 if nome and dia > 0 and mes > 0:
     signo, frase = calcula_signo(dia, mes)
-    nome_title = nome.title()  # 🔹 Primeiras letras maiúsculas
+    nome_title = nome.title()  # Primeira letra maiúscula
+    
     if signo != "Data inválida":
         st.write(f"Olá **{nome_title}**, seu aniversário é no dia **{dia} do {mes}**, então você é de **{signo}**.")
+        
         conselho = st.radio("Gostaria de um conselho?", ("Não", "Sim"))
         if conselho == "Sim":
             st.success(frase)
-            famoso = famosos.get(signo, "Desconhecido")
-            st.info(f"✨ Um famoso americano do seu signo é **{famoso}**!")
+
+        famoso = st.radio("Gostaria de saber um famoso do seu signo?", ("Não", "Sim"))
+        if famoso == "Sim":
+            st.info(f"Um famoso de {signo} é **{famosos.get(signo, 'desconhecido')}** 🌟")
     else:
         st.error("Data inválida. Verifique o dia e o mês informados.")
