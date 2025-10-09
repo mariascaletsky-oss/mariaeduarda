@@ -1,5 +1,4 @@
-import streamlit as st
-import random
+\import streamlit as st
 
 # Função para calcular o signo
 def calcula_signo(dia, mes):
@@ -30,36 +29,21 @@ def calcula_signo(dia, mes):
     else:
         return "Data inválida", ""
 
-# Interface do usuário
-st.title("Transformador de Nome e Signo")
+# Interface
+st.title("Descubra seu Signo 🌟")
 
-# Inputs principais
+# Entradas do usuário
 nome = st.text_input("Digite seu nome:")
 dia = st.number_input("Dia do nascimento:", min_value=1, max_value=31, step=1)
 mes = st.number_input("Mês do nascimento:", min_value=1, max_value=12, step=1)
 
-# Opções na barra lateral
-opcao = st.sidebar.selectbox(
-    "O que você gostaria de ver?",
-    ("Transformações do nome", "Número de letras", "Signo", "Perguntas Verdadeiro ou Falso")
-)
-
-# Exibição com base na seleção
-if opcao == "Transformações do nome" and nome:
-    st.write("Minúsculas:", nome.lower())
-    st.write("Maiúsculas:", nome.upper())
-    st.write("Capitalizado:", nome.capitalize())
-
-if opcao == "Número de letras" and nome:
-    st.write(f"Número de letras: {len(nome)}")
-
-if opcao == "Signo" and dia and mes:
+# Exibição principal
+if nome and dia and mes:
     signo, frase = calcula_signo(dia, mes)
-    st.write(f"Seu signo é: {signo}")
-    st.write(f"Frase do signo: {frase}")
-
-if opcao == "Perguntas Verdadeiro ou Falso":
-    perguntas = [
-        ("Seu nome contém a letra 'a'.", 'a' in nome.lower()),
-        ("Seu signo é Áries.", calcula_signo(dia, mes)[0] == "Áries ♈")
-    ]
+    if signo != "Data inválida":
+        st.write(f"Olá **{nome}**, seu signo é **{signo}**.")
+        conselho = st.radio("Gostaria de um conselho?", ("Não", "Sim"))
+        if conselho == "Sim":
+            st.success(frase)
+    else:
+        st.error("Data inválida. Verifique o dia e o mês informados.")
