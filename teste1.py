@@ -105,10 +105,11 @@ if st.session_state.pagina == "perguntas":
 # ---------- PAGINA 2: CARREGANDO ----------
 elif st.session_state.pagina == "carregando":
     st.title("🔮 Calculando seu signo...")
-    st.info("Aguarde um momento enquanto descobrimos seu signo...")
-    time.sleep(2)  # simula carregamento
+    progress = st.progress(0)
+    for i in range(100):
+        time.sleep(0.02)
+        progress.progress(i + 1)
     st.session_state.pagina = "resultado"
-    st.experimental_rerun()
 
 # ---------- PAGINA 3: RESULTADO ----------
 elif st.session_state.pagina == "resultado":
