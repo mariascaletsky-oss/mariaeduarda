@@ -104,7 +104,6 @@ if st.session_state.pagina == "perguntas":
 
     if st.button("Ver resultado") and st.session_state.nome:
         st.session_state.pagina = "resultado"
-        st.experimental_rerun()
 
 # ---------- PAGINA 2: RESULTADO ----------
 elif st.session_state.pagina == "resultado":
@@ -134,4 +133,3 @@ elif st.session_state.pagina == "resultado":
     
     if st.button("Voltar para perguntas"):
         st.session_state.pagina = "perguntas"
-        st.experimental_rerun()
