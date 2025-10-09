@@ -51,20 +51,19 @@ meses = {
     9: "setembro", 10: "outubro", 11: "novembro", 12: "dezembro"
 }
 
-# Cores por signo
 cores_signo = {
-    "Áries ♈": "#FF4500",       # laranja vermelho
-    "Touro ♉": "#228B22",       # verde floresta
-    "Gêmeos ♊": "#FFD700",      # amarelo ouro
-    "Câncer ♋": "#1E90FF",      # azul dodger
-    "Leão ♌": "#FFA500",        # laranja
-    "Virgem ♍": "#32CD32",      # verde limão
-    "Libra ♎": "#FF69B4",       # rosa forte
-    "Escorpião ♏": "#8B0000",   # vermelho escuro
-    "Sagitário ♐": "#FF8C00",   # laranja escuro
-    "Capricórnio ♑": "#2F4F4F", # cinza escuro
-    "Aquário ♒": "#00CED1",     # azul turquesa
-    "Peixes ♓": "#9370DB"       # roxo médio
+    "Áries ♈": "#FF4500",
+    "Touro ♉": "#228B22",
+    "Gêmeos ♊": "#FFD700",
+    "Câncer ♋": "#1E90FF",
+    "Leão ♌": "#FFA500",
+    "Virgem ♍": "#32CD32",
+    "Libra ♎": "#FF69B4",
+    "Escorpião ♏": "#8B0000",
+    "Sagitário ♐": "#FF8C00",
+    "Capricórnio ♑": "#2F4F4F",
+    "Aquário ♒": "#00CED1",
+    "Peixes ♓": "#9370DB"
 }
 
 # ---------- SIDEBAR ----------
@@ -81,11 +80,9 @@ if tema == "Claro 🌞":
     """, unsafe_allow_html=True)
 
 else:  # Colorido
-    # Para o tema colorido, a cor será definida depois do cálculo do signo
     st.markdown("""
         <style>
         .stApp {background-color: #fff0f5;}
-        .stApp * {font-family: 'Comic Sans MS', cursive, sans-serif !important;}
         </style>
     """, unsafe_allow_html=True)
 
@@ -103,10 +100,12 @@ if nome and dia > 0 and mes > 0:
     if signo != "Data inválida":
         mes_nome = meses.get(mes, "mês desconhecido")
         
-        # Se tema colorido, aplica cor do signo
         if tema == "Colorido ✨":
             cor_texto = cores_signo.get(signo, "#800080")
-            st.markdown(f"<h3 style='color:{cor_texto}'>Olá <b>{nome_title}</b>, seu aniversário é no dia <b>{dia} de {mes_nome}</b>, então você é de <b>{signo}</b>.</h3>", unsafe_allow_html=True)
+            st.markdown(
+                f"<h3 style='color:{cor_texto}'>Olá <b>{nome_title}</b>, seu aniversário é no dia <b>{dia} de {mes_nome}</b>, então você é de <b>{signo}</b>.</h3>",
+                unsafe_allow_html=True
+            )
         else:
             st.write(f"Olá **{nome_title}**, seu aniversário é no dia **{dia} de {mes_nome}**, então você é de **{signo}**.")
         
