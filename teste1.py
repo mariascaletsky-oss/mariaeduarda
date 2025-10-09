@@ -105,4 +105,18 @@ if nome and dia > 0 and mes > 0:
         
         # Se tema colorido, aplica cor do signo
         if tema == "Colorido ✨":
-            cor_texto = cores_signo.get(signo, "#80008
+            cor_texto = cores_signo.get(signo, "#800080")
+            st.markdown(f"<h3 style='color:{cor_texto}'>Olá <b>{nome_title}</b>, seu aniversário é no dia <b>{dia} de {mes_nome}</b>, então você é de <b>{signo}</b>.</h3>", unsafe_allow_html=True)
+        else:
+            st.write(f"Olá **{nome_title}**, seu aniversário é no dia **{dia} de {mes_nome}**, então você é de **{signo}**.")
+        
+        conselho = st.radio("Gostaria de um conselho?", ("Não", "Sim"))
+        if conselho == "Sim":
+            st.success(frase)
+
+        famoso = st.radio("Gostaria de saber um famoso do seu signo?", ("Não", "Sim"))
+        if famoso == "Sim":
+            nome_famoso = famosos.get(signo, "Desconhecido")
+            st.info(f"Um famoso de {signo} é **{nome_famoso}** 🌟")
+    else:
+        st.error("Data inválida. Verifique o dia e o mês informados.")
