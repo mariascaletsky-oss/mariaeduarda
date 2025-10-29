@@ -1,6 +1,3 @@
-# app_busca_deputado_paginas.py
-# -*- coding: utf-8 -*-
-
 import requests
 import streamlit as st
 import pandas as pd
