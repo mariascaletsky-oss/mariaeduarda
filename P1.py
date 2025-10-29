@@ -1,8 +1,21 @@
+# app_busca_deputado_paginas.py
+# -*- coding: utf-8 -*-
+"""
+App Streamlit com **duas páginas** e **sidebar de opções**:
+- Página 1: PESQUISA → usuário digita o nome e executa a busca
+- Página 2: RESPOSTAS → lista resultados e exibe detalhes; possui botão "⬅ Voltar à Pesquisa"
+- Sidebar (em ambas as páginas): opções de exibição (tabela compacta / link para API)
+
+Como rodar:
+  pip install streamlit requests
+  streamlit run app_busca_deputado_paginas.py
+"""
+
 import requests
 import streamlit as st
 
 API_BASE = "https://dadosabertos.camara.leg.br/api/v2"
-HEADERS = {"User-Agent": "Streamlit Busca Deputado/2.1", "Accept": "application/json"}
+HEADERS = {"User-Agent": "Streamlit Busca Deputado/2.2", "Accept": "application/json"}
 
 st.set_page_config(page_title="Buscar Deputado (2 páginas)", page_icon="🔎", layout="wide")
 st.title("🔎 Busca de Deputado")
@@ -67,12 +80,11 @@ with st.sidebar:
         st.session_state.pagina = pagina_sidebar
         st.rerun()
 
-
 # --------------------------------------------------
 # PÁGINA 1 — PESQUISA
 # --------------------------------------------------
 if st.session_state.pagina == "Pesquisa":
-    st.subheader("Pesquisa:")
+    st.subheader("Pesquisa")
     with st.form("form_pesquisa"):
         nome_query = st.text_input(
             "Nome do(a) deputado(a)",
@@ -108,7 +120,7 @@ if st.session_state.pagina == "Pesquisa":
 # --------------------------------------------------
 # PÁGINA 2 — RESPOSTAS
 # --------------------------------------------------
-if st.session_state.pagina == "Deputado(a) encontrada":
+if st.session_state.pagina == "Respostas":
     # Botão seta (voltar)
     col_back, _ = st.columns([1, 9])
     with col_back:
@@ -116,7 +128,7 @@ if st.session_state.pagina == "Deputado(a) encontrada":
             st.session_state.pagina = "Pesquisa"
             st.rerun()
 
-    st.subheader("Página 2 – Respostas")
+    st.subheader("Respostas")
 
     resultados = st.session_state.resultados
     if not resultados:
