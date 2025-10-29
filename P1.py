@@ -1,261 +1,353 @@
+# app.py
+# -*- coding: utf-8 -*-
+"""
+Painel interativo (Streamlit) para explorar dados de deputados federais em exercício
+usando a API de Dados Abertos da Câmara dos Deputados.
+
+Funcionalidades:
+- Filtros por nome, partido (sigla), UF e legislatura
+- Tabela interativa com nome, partido, UF e e-mail
+- Gráfico de barras por UF (contagem de deputados)
+- Gráfico de pizza por partido (distribuição)
+- Relatório detalhado de despesas por deputado, com filtros por ano e por tipo de gasto
+- Exportação CSV
+
+Como rodar:
+1) Instale dependências:  
+   pip install streamlit requests pandas matplotlib
+2) Execute:  
+   streamlit run app.py
+"""
+
+import io
+import math
 import time
-from typing import Dict, List, Optional
+import json
+import typing as t
+from datetime import datetime
+
 import requests
 import pandas as pd
-
-BASE_URL = "https://dadosabertos.camara.leg.br/api/v2"
-HEADERS = {"User-Agent": "FGV-P2-Streamlit/1.0 (contato@exemplo.com)"}
-
-class CamaraAPIError(Exception):
-    pass
-
-
-def _get(url: str, params: Optional[Dict] = None) -> Dict:
-    """Requisição GET com retry simples e tratamento básico de erro."""
-    tries = 0
-    while True:
-        tries += 1
-        r = requests.get(url, params=params or {}, headers=HEADERS, timeout=30)
-        if r.status_code == 200:
-            return r.json()
-        if tries >= 3:
-            raise CamaraAPIError(f"Erro {r.status_code} ao acessar {url} — {r.text[:200]}")
-        time.sleep(1.2)
-
-
-# -----------------------------
-# DEPUTADOS
-# -----------------------------
-
-def list_deputados(
-    nome: Optional[str] = None,
-    sigla_uf: Optional[str] = None,
-    sigla_partido: Optional[str] = None,
-    id_legislatura: Optional[int] = None,
-    itens_por_pagina: int = 100,
-    limite_paginas: int = 5,
-) -> pd.DataFrame:
-    """Lista deputados em exercício, com filtros opcionais."""
-    frames: List[pd.DataFrame] = []
-    pagina = 1
-    while pagina <= limite_paginas:
-        params = {
-            "pagina": pagina,
-            "itens": itens_por_pagina,
-            "ordenarPor": "nome",
-            "ordem": "ASC",
-        }
-        if nome:
-            params["nome"] = nome
-        if sigla_uf:
-            params["siglaUf"] = sigla_uf
-        if sigla_partido:
-            params["siglaPartido"] = sigla_partido
-        if id_legislatura:
-            params["idLegislatura"] = id_legislatura
-        url = f"{BASE_URL}/deputados"
-        payload = _get(url, params=params)
-        dados = payload.get("dados", [])
-        if not dados:
-            break
-        df = pd.json_normalize(dados)
-        frames.append(df)
-        pagina += 1
-    if not frames:
-        return pd.DataFrame()
-    df_all = pd.concat(frames, ignore_index=True)
-    # Campos comuns esperados: id, nome, siglaPartido, siglaUf, email, uri
-    keep = [c for c in ["id","nome","siglaPartido","siglaUf","email","uri"] if c in df_all.columns]
-    return df_all[keep].copy()
-
-
-def get_deputado_detail(deputado_id: int) -> pd.DataFrame:
-    """Detalhes do deputado (dados cadastrais)."""
-    url = f"{BASE_URL}/deputados/{deputado_id}"
-    payload = _get(url)
-    dados = payload.get("dados", {})
-    return pd.json_normalize(dados)
-
-
-def get_despesas(
-    deputado_id: int,
-    ano: Optional[int] = None,
-    mes: Optional[int] = None,
-    itens_por_pagina: int = 100,
-    limite_paginas: int = 12,
-) -> pd.DataFrame:
-    """Despesas do deputado (CEAP). Paginado por padrão."""
-    frames: List[pd.DataFrame] = []
-    pagina = 1
-    while pagina <= limite_paginas:
-        params = {"pagina": pagina, "itens": itens_por_pagina}
-        if ano:
-            params["ano"] = int(ano)
-        if mes:
-            params["mes"] = int(mes)
-        url = f"{BASE_URL}/deputados/{deputado_id}/despesas"
-        payload = _get(url, params=params)
-        dados = payload.get("dados", [])
-        if not dados:
-            break
-        df = pd.json_normalize(dados)
-        frames.append(df)
-        pagina += 1
-    if not frames:
-        return pd.DataFrame()
-    df_all = pd.concat(frames, ignore_index=True)
-    # Normalização básica
-    if "dataDocumento" in df_all.columns:
-        df_all["dataDocumento"] = pd.to_datetime(df_all["dataDocumento"], errors="coerce")
-    for c in ("valorDocumento","valorLiquido","valorGlosa"):
-        if c in df_all.columns:
-            df_all[c] = pd.to_numeric(df_all[c], errors="coerce")
-    return df_all
-
-
-# =============================
-# file: utils/data_processing.py
-# =============================
-import pandas as pd
-
-
-def dist_por_uf(df_dep: pd.DataFrame) -> pd.DataFrame:
-    if df_dep.empty or "siglaUf" not in df_dep.columns:
-        return pd.DataFrame({"siglaUf": [], "qtd": []})
-    return (
-        df_dep.groupby("siglaUf").size().reset_index(name="qtd").sort_values(["qtd","siglaUf"], ascending=[False, True])
-    )
-
-
-def dist_por_partido(df_dep: pd.DataFrame) -> pd.DataFrame:
-    if df_dep.empty or "siglaPartido" not in df_dep.columns:
-        return pd.DataFrame({"siglaPartido": [], "qtd": []})
-    return (
-        df_dep.groupby("siglaPartido").size().reset_index(name="qtd").sort_values(["qtd","siglaPartido"], ascending=[False, True])
-    )
-
-
-def despesas_por_tipo(df_des: pd.DataFrame) -> pd.DataFrame:
-    if df_des.empty or "tipoDespesa" not in df_des.columns:
-        return pd.DataFrame({"tipoDespesa": [], "valorLiquido": []})
-    base = df_des.copy()
-    if "valorLiquido" not in base.columns:
-        base["valorLiquido"] = 0.0
-    agg = base.groupby("tipoDespesa", dropna=False)["valorLiquido"].sum().reset_index()
-    return agg.sort_values("valorLiquido", ascending=False)
-
-
-# =============================
-# file: streamlit_app.py
-# =============================
-import pandas as pd
-import plotly.express as px
 import streamlit as st
-from utils.api_client import list_deputados, get_deputado_detail, get_despesas
-from utils.data_processing import dist_por_uf, dist_por_partido, despesas_por_tipo
+import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Painel — Deputados", layout="wide")
-st.title("👤 Painel dos Deputados — Câmara dos Deputados")
-st.caption("FGV Direito Rio — P2 | Python + Streamlit")
+API_BASE = "https://dadosabertos.camara.leg.br/api/v2"
+HEADERS = {"User-Agent": "Streamlit Deputados/1.0", "Accept": "application/json"}
+
+# ----------------------------
+# Utilidades de requisição
+# ----------------------------
+
+def _get(url: str, params: dict | None = None) -> dict:
+    """Faz GET simples com tratamento de erros e retorno JSON.
+    Lida com erros de rede e HTTP. Retorna dicionário JSON.
+    """
+    try:
+        r = requests.get(url, params=params or {}, headers=HEADERS, timeout=30)
+        r.raise_for_status()
+        return r.json()
+    except requests.HTTPError as e:
+        st.error(f"Erro HTTP ao acessar {url}: {e}")
+        return {"dados": [], "links": []}
+    except requests.RequestException as e:
+        st.error(f"Erro de rede ao acessar {url}: {e}")
+        return {"dados": [], "links": []}
+
+
+def _paginate(url: str, params: dict | None = None, max_pages: int | None = None) -> list[dict]:
+    """Percorre paginação do serviço ('links' com rel='next') e acumula 'dados'."""
+    collected: list[dict] = []
+    page = int(params.get("pagina", 1) if params else 1)
+    params = {**(params or {}), "itens": 100, "pagina": page}
+    pages_read = 0
+
+    while True:
+        resp = _get(url, params)
+        dados = resp.get("dados", []) or []
+        collected.extend(dados)
+        pages_read += 1
+
+        # Verifica link 'next'
+        links = resp.get("links", [])
+        next_link = next((l for l in links if l.get("rel") == "next"), None)
+        if next_link and (max_pages is None or pages_read < max_pages):
+            params["pagina"] = params.get("pagina", 1) + 1
+            # pequenas pausas para não sobrecarregar API
+            time.sleep(0.15)
+            continue
+        break
+
+    return collected
+
+
+# ----------------------------
+# Endpoints de dados
+# ----------------------------
+
+@st.cache_data(ttl=3600)
+def listar_partidos_siglas() -> list[str]:
+    url = f"{API_BASE}/partidos"
+    dados = _paginate(url, {"ordem": "ASC", "ordenarPor": "sigla"})
+    siglas = [d.get("sigla") for d in dados if d.get("sigla")]
+    return sorted(set(siglas))
+
+
+@st.cache_data(ttl=3600)
+def listar_legislaturas() -> pd.DataFrame:
+    """Retorna DF com legislaturas (id, dataInicio, dataFim)."""
+    url = f"{API_BASE}/legislaturas"
+    dados = _paginate(url, {"ordem": "DESC", "ordenarPor": "id"})
+    if not dados:
+        return pd.DataFrame(columns=["id", "dataInicio", "dataFim"])
+    return pd.DataFrame(dados)
+
+
+@st.cache_data(ttl=900)
+def buscar_deputados(nome: str | None, partido: str | None, uf: str | None, legislatura: int | None) -> pd.DataFrame:
+    params = {"ordem": "ASC", "ordenarPor": "nome"}
+    if nome:
+        params["nome"] = nome
+    if partido:
+        params["siglaPartido"] = partido
+    if uf:
+        params["siglaUf"] = uf
+    if legislatura:
+        params["idLegislatura"] = legislatura
+
+    url = f"{API_BASE}/deputados"
+    dados = _paginate(url, params)
+
+    if not dados:
+        return pd.DataFrame(columns=["id", "nome", "siglaPartido", "siglaUf", "email"])
+
+    # Campos principais já vêm em 'dados'. Campos de e-mail podem estar em 'uri' detalhada; 
+    # mas frequentemente já vem 'email'. Manteremos o que a API fornece.
+    df = pd.DataFrame(dados)
+    # Normaliza colunas importantes
+    keep = ["id", "nome", "siglaPartido", "siglaUf", "email"]
+    for c in keep:
+        if c not in df.columns:
+            df[c] = None
+    return df[keep]
+
+
+@st.cache_data(ttl=900)
+def detalhes_deputado(deputado_id: int) -> dict:
+    url = f"{API_BASE}/deputados/{deputado_id}"
+    resp = _get(url)
+    return (resp.get("dados") or {})
+
+
+@st.cache_data(ttl=600)
+def despesas_deputado(
+    deputado_id: int,
+    ano: int | None = None,
+    tipo_despesa: str | None = None,
+) -> pd.DataFrame:
+    """Busca despesas do deputado. 'tipo_despesa' aqui é filtrado pela descrição presente nos dados.
+    A API aceita 'tipoDespesa' (código), mas vamos filtrar client-side pela coluna 'tipoDespesa'/'descricaoTipoDespesa'.
+    """
+    url = f"{API_BASE}/deputados/{deputado_id}/despesas"
+    params = {"ordem": "DESC", "ordenarPor": "dataDocumento"}
+    if ano:
+        params["ano"] = ano
+
+    dados = _paginate(url, params, max_pages=50)  # limite defensivo
+    if not dados:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(dados)
+
+    # Algumas chaves comuns: 'ano', 'mes', 'tipoDespesa', 'descricaoTipoDespesa', 'nomeFornecedor', 'cnpjCpfFornecedor',
+    # 'valorDocumento', 'valorLiquido', 'urlDocumento', 'dataDocumento'
+    if tipo_despesa and "descricaoTipoDespesa" in df.columns:
+        df = df[df["descricaoTipoDespesa"].fillna("").str.contains(tipo_despesa, case=False, na=False)]
+
+    return df
+
+
+# ----------------------------
+# UI
+# ----------------------------
+
+st.set_page_config(page_title="Painel de Deputados (Câmara)", page_icon="🏛️", layout="wide")
+st.title("🏛️ Painel de Deputados – Câmara dos Deputados (Dados Abertos)")
+st.caption("Dados oficiais: API de Dados Abertos da Câmara dos Deputados • Atualização em tempo real das consultas")
 
 with st.sidebar:
-    st.header("🔎 Filtros")
-    nome = st.text_input("Nome (opcional)")
-    col1, col2 = st.columns(2)
-    with col1:
-        partido = st.text_input("Sigla do partido (ex.: PT)")
-    with col2:
-        uf = st.text_input("UF (ex.: RJ)")
-    legislatura = st.number_input("ID da Legislatura (opcional)", min_value=0, value=0, step=1)
-    buscar = st.button("Buscar deputados", type="primary")
+    st.header("Filtros")
+    nome = st.text_input("Nome do deputado(a)")
 
-@st.cache_data(show_spinner=False)
-def _buscar_deputados(nome, uf, partido, leg):
-    leg_val = int(leg) if leg else None
-    if leg_val == 0:
-        leg_val = None
-    return list_deputados(
-        nome=nome or None,
-        sigla_uf=(uf or None),
-        sigla_partido=(partido or None),
-        id_legislatura=leg_val,
-        itens_por_pagina=100,
-        limite_paginas=10,
-    )
+    # Siglas de partidos a partir do endpoint /partidos
+    try:
+        partidos = [""] + listar_partidos_siglas()
+    except Exception:
+        partidos = [""]
+    partido = st.selectbox("Partido (sigla)", options=partidos, index=0)
+    partido = partido or None
+
+    # Lista de UFs fixas
+    UFS = [
+        "", "AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT",
+        "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO",
+    ]
+    uf = st.selectbox("Unidade Federativa (UF)", options=UFS, index=0)
+    uf = uf or None
+
+    # Legislaturas disponíveis
+    try:
+        df_leg = listar_legislaturas()
+        ids_leg = [""] + [int(x) for x in df_leg.get("id", [])]
+    except Exception:
+        ids_leg = [""]
+    leg_raw = st.selectbox("Legislatura (id)", options=ids_leg, index=0)
+    legislatura = int(leg_raw) if str(leg_raw).strip().isdigit() else None
+
+    st.markdown("---")
+    st.caption("Selecione filtros e clique em **Buscar**.")
+    buscar = st.button("🔎 Buscar deputados")
 
 if buscar:
-    with st.spinner("Carregando dados dos deputados…"):
-        df_dep = _buscar_deputados(nome, uf, partido, legislatura)
+    df_dep = buscar_deputados(nome, partido, uf, legislatura)
+else:
+    # Busca inicial sem filtros pesados (exibe todos em exercício)
+    df_dep = buscar_deputados(None, None, None, legislatura)
 
-    if df_dep.empty:
-        st.warning("Nenhum deputado encontrado para os filtros fornecidos.")
-        st.stop()
+st.subheader("Resultados")
+if df_dep.empty:
+    st.info("Nenhum deputado encontrado para os filtros selecionados.")
+else:
+    # KPIs básicos
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total de deputados encontrados", len(df_dep))
+    with col2:
+        st.metric("Partidos únicos", df_dep["siglaPartido"].nunique())
+    with col3:
+        st.metric("UFs representadas", df_dep["siglaUf"].nunique())
 
-    st.success(f"{len(df_dep)} deputados encontrados.")
+    # Tabela
+    st.dataframe(
+        df_dep.rename(columns={
+            "nome": "Nome",
+            "siglaPartido": "Partido",
+            "siglaUf": "UF",
+            "email": "E-mail",
+        }),
+        use_container_width=True,
+    )
 
-    # ---- Gráficos de distribuição ----
-    colA, colB = st.columns(2)
-    with colA:
-        duf = dist_por_uf(df_dep)
-        if not duf.empty:
-            fig_uf = px.bar(duf, x="siglaUf", y="qtd", title="Distribuição por UF")
-            st.plotly_chart(fig_uf, use_container_width=True)
-    with colB:
-        dpart = dist_por_partido(df_dep)
-        if not dpart.empty:
-            fig_part = px.pie(dpart, names="siglaPartido", values="qtd", title="Distribuição por partido")
-            st.plotly_chart(fig_part, use_container_width=True)
+    # Exportação CSV dos resultados de deputados
+    csv_dep = df_dep.to_csv(index=False).encode("utf-8")
+    st.download_button("⬇️ Baixar CSV (deputados)", data=csv_dep, file_name="deputados.csv", mime="text/csv")
 
-    # ---- Tabela principal ----
-    st.subheader("Lista de Deputados")
-    show_cols = [c for c in ["id","nome","siglaPartido","siglaUf","email","uri"] if c in df_dep.columns]
-    st.dataframe(df_dep[show_cols], use_container_width=True, hide_index=True)
-
-    # ---- Detalhe + despesas ----
+    # Gráficos
     st.markdown("---")
-    st.subheader("Detalhar deputado e despesas (CEAP)")
-    c1, c2, c3 = st.columns([2,1,1])
-    with c1:
-        dep_id = st.selectbox("Escolha o ID do deputado", options=df_dep["id"].tolist())
-    with c2:
-        ano = st.number_input("Ano (ex.: 2024)", min_value=2009, max_value=2100, value=2024, step=1)
-    with c3:
-        ver = st.button("Carregar despesas")
+    st.subheader("Visualizações")
+    colg1, colg2 = st.columns(2)
 
-    if ver:
-        t1, t2 = st.tabs(["📇 Dados cadastrais", "💳 Despesas por tipo"])
-        with t1:
-            with st.spinner("Carregando dados cadastrais…"):
-                df_det = get_deputado_detail(int(dep_id))
-            if df_det.empty:
-                st.info("Sem dados disponíveis.")
+    with colg1:
+        st.markdown("**Distribuição por UF (barras)**")
+        contagem_uf = df_dep["siglaUf"].value_counts().sort_index()
+        st.bar_chart(contagem_uf)
+
+    with colg2:
+        st.markdown("**Distribuição por Partido (pizza)**")
+        dist_partido = df_dep["siglaPartido"].value_counts().sort_values(ascending=False)
+        if not dist_partido.empty:
+            fig, ax = plt.subplots()
+            ax.pie(dist_partido.values, labels=dist_partido.index, autopct="%1.1f%%")
+            ax.axis("equal")
+            st.pyplot(fig, clear_figure=True)
+        else:
+            st.write("Sem dados de partido para exibir.")
+
+    # ----------------------------
+    # Seção: Despesas por deputado
+    # ----------------------------
+    st.markdown("---")
+    st.subheader("Relatório de despesas por deputado")
+
+    # Seleciona um deputado
+    opcoes_deps = [f"{row.nome} (ID {row.id}) - {row.siglaPartido}/{row.siglaUf}" for _, row in df_dep.iterrows()]
+    if opcoes_deps:
+        escolha = st.selectbox("Escolha o deputado(a)", options=[""] + opcoes_deps, index=0)
+        if escolha:
+            # Extrai ID
+            try:
+                dep_id = int(escolha.split("ID ")[1].split(")")[0])
+            except Exception:
+                dep_id = None
+
+            if dep_id:
+                # Mostrar cartão com dados básicos
+                info = detalhes_deputado(dep_id)
+                nome_dep = info.get("ultimoStatus", {}).get("nome") or info.get("nomeCivil")
+                email_dep = info.get("ultimoStatus", {}).get("gabinete", {}).get("email") or info.get("email")
+                partido_dep = info.get("ultimoStatus", {}).get("siglaPartido")
+                uf_dep = info.get("ultimoStatus", {}).get("siglaUf")
+
+                with st.container(border=True):
+                    st.markdown(f"**{nome_dep or '—'}**  ")
+                    st.write(f"Partido/UF: {partido_dep or '—'}/{uf_dep or '—'}")
+                    if email_dep:
+                        st.write(f"E-mail: {email_dep}")
+
+                # Filtros de despesas
+                ano_atual = datetime.now().year
+                ano = st.selectbox(
+                    "Ano das despesas",
+                    options=list(range(2015, ano_atual + 1))[::-1],
+                    index=0,
+                )
+
+                # Primeiro busca despesas do ano, depois lista tipos para filtrar
+                df_desp = despesas_deputado(dep_id, ano=ano)
+                tipos_disp = sorted(df_desp.get("descricaoTipoDespesa", pd.Series(dtype=str)).dropna().unique().tolist()) if not df_desp.empty else []
+                tipo_escolhido = st.selectbox("Filtrar por tipo de despesa (opcional)", options=[""] + tipos_disp, index=0)
+                tipo_use = tipo_escolhido or None
+
+                if tipo_use:
+                    df_desp = despesas_deputado(dep_id, ano=ano, tipo_despesa=tipo_use)
+
+                if df_desp.empty:
+                    st.info("Nenhuma despesa encontrada para os filtros selecionados.")
+                else:
+                    # Colunas amigáveis
+                    cols_keep = [
+                        "ano","mes","dataDocumento","descricaoTipoDespesa","nomeFornecedor","cnpjCpfFornecedor",
+                        "valorDocumento","valorLiquido","urlDocumento",
+                    ]
+                    for c in cols_keep:
+                        if c not in df_desp.columns:
+                            df_desp[c] = None
+                    df_view = df_desp[cols_keep].copy()
+
+                    # Ordena por data
+                    if "dataDocumento" in df_view.columns:
+                        df_view["dataDocumento"] = pd.to_datetime(df_view["dataDocumento"], errors="coerce")
+                        df_view = df_view.sort_values("dataDocumento", ascending=False)
+
+                    # KPIs de despesas
+                    total_liq = pd.to_numeric(df_view["valorLiquido"], errors="coerce").fillna(0).sum()
+                    total_doc = pd.to_numeric(df_view["valorDocumento"], errors="coerce").fillna(0).sum()
+
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        st.metric("Total (valor líquido)", f"R$ {total_liq:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+                    with c2:
+                        st.metric("Total (valor documento)", f"R$ {total_doc:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+
+                    st.dataframe(df_view, use_container_width=True)
+
+                    # Export CSV despesas
+                    csv_desp = df_view.to_csv(index=False).encode("utf-8")
+                    st.download_button(
+                        "⬇️ Baixar CSV (despesas)", data=csv_desp, file_name=f"despesas_{dep_id}_{ano}.csv", mime="text/csv"
+                    )
             else:
-                # Mostra subset amigável se existir
-                cols_pref = [
-                    "ultimoStatus.nome","ultimoStatus.siglaPartido","ultimoStatus.siglaUf",
-                    "ultimoStatus.email","ultimoStatus.gabinete.nome","ultimoStatus.gabinete.predio",
-                    "ultimoStatus.gabinete.sala","ultimoStatus.gabinete.telefone"
-                ]
-                have = [c for c in cols_pref if c in df_det.columns]
-                st.dataframe(df_det[have] if have else df_det, use_container_width=True, hide_index=True)
-        with t2:
-            with st.spinner("Carregando despesas…"):
-                df_des = get_despesas(int(dep_id), ano=int(ano))
-            if df_des.empty:
-                st.info("Nenhuma despesa encontrada para o período.")
-            else:
-                agg = despesas_por_tipo(df_des)
-                fig = px.bar(agg, x="tipoDespesa", y="valorLiquido", title=f"Despesas por tipo — {ano}")
-                st.plotly_chart(fig, use_container_width=True)
-                st.dataframe(df_des, use_container_width=True, hide_index=True)
-                csv_bytes = df_des.to_csv(index=False).encode("utf-8")
-                st.download_button("⬇️ Baixar CSV de despesas", data=csv_bytes, file_name=f"despesas_{dep_id}_{ano}.csv", mime="text/csv")
+                st.warning("Não foi possível identificar o ID do deputado selecionado.")
+    else:
+        st.info("Carregue resultados de deputados para selecionar e ver despesas.")
 
-
-# =============================
-# file: requirements.txt (opcional)
-# =============================
-# streamlit>=1.38.0
-# requests>=2.31.0
-# pandas>=2.2.0
-# plotly>=5.22.0
+st.markdown("\n\n—\n*Aplicação educacional. Verifique detalhes e metadados diretamente na API oficial quando necessário.*")
