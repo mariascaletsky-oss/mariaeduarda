@@ -1,16 +1,3 @@
-# =============================
-# Projeto: Painel dos Deputados — Câmara dos Deputados
-# Stack: Python 3.10+, Streamlit, Requests, Pandas, Plotly
-# Arquivos:
-#   streamlit_app.py
-#   utils/api_client.py
-#   utils/data_processing.py
-#   requirements.txt (opcional)
-# =============================
-
-# =============================
-# file: utils/api_client.py
-# =============================
 import time
 from typing import Dict, List, Optional
 import requests
