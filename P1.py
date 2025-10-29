@@ -3,19 +3,15 @@
 """
 App Streamlit com **duas páginas** e **sidebar de opções**:
 - Página 1: PESQUISA → usuário digita o nome e executa a busca
-- Página 2: RESPOSTAS → lista resultados, gráficos/tabelas e exibe detalhes; possui botão "⬅ Voltar à Pesquisa"
-- Sidebar (em ambas as páginas): opções de exibição (tabela compacta / link para API)
+- Página 2: RESPOSTAS → lista resultados, exibe detalhes e gráficos específicos
+  • Gráfico de barras: **distribuição por UF do partido do deputado selecionado**
+  • Gráfico de linha: **evolução anual (valor líquido) das despesas do deputado selecionado**
+- Sidebar em ambas as páginas: opções de exibição (tabela compacta / link para API)
 
-Gráficos e relatórios gerados
-- Gráfico de barras por UF (nº de deputados em exercício por unidade federativa)
-- Gráfico de setores (pizza) com a distribuição dos deputados por partido (usa matplotlib **se disponível**; caso contrário, mostra barras como fallback)
-- Tabela interativa (nome, partido, UF, e e-mail) + download CSV
-- Relatório detalhado de **despesas por deputado**, com **filtros por ano e tipo de gasto** e **exportação CSV**
-
-Como rodar (com pizza usando matplotlib):
+Como rodar (com matplotlib para o gráfico de linha opcional):
   pip install streamlit requests pandas matplotlib
 
-Como rodar (sem matplotlib – o app funciona, mas a pizza vira barras):
+Se não quiser matplotlib, o app usa fallback para st.line_chart:
   pip install streamlit requests pandas
 
   streamlit run app_busca_deputado_paginas.py
@@ -27,7 +23,7 @@ import pandas as pd
 from datetime import datetime
 from typing import Optional
 
-# matplotlib é opcional — se não houver, fazemos fallback para barras
+# matplotlib é opcional — se não houver, fazemos fallback para st.line_chart
 try:
     import matplotlib.pyplot as plt  # type: ignore
     HAS_MPL = True
@@ -35,7 +31,7 @@ except Exception:
     HAS_MPL = False
 
 API_BASE = "https://dadosabertos.camara.leg.br/api/v2"
-HEADERS = {"User-Agent": "Streamlit Busca Deputado/2.4", "Accept": "application/json"}
+HEADERS = {"User-Agent": "Streamlit Busca Deputado/2.5", "Accept": "application/json"}
 
 st.set_page_config(page_title="Buscar Deputado (2 páginas)", page_icon="🔎", layout="wide")
 st.title("🔎 Busca de Deputado")
@@ -50,8 +46,7 @@ def search_deputados_by_name(nome: str):
     try:
         r = requests.get(f"{API_BASE}/deputados", params=params, headers=HEADERS, timeout=30)
         r.raise_for_status()
-        data = r.json().get("dados", [])
-        return data
+        return r.json().get("dados", [])
     except requests.RequestException as e:
         st.error(f"Erro ao buscar deputados: {e}")
         return []
@@ -209,32 +204,39 @@ if st.session_state.pagina == "Respostas":
     if not resultados:
         st.info("Nenhum resultado para exibir. Volte à página **Pesquisa** e faça uma busca.")
     else:
-        # ---------------- Visualizações gerais da lista ----------------
-# (Removemos gráficos globais por UF/Partido; agora os gráficos são específicos
-# ao partido do deputado selecionado e às despesas por ano.)
+        # Tabela interativa + CSV (com df_dep devidamente definido)
+        df_dep = pd.DataFrame(resultados)
+        for c in ["nome", "siglaPartido", "siglaUf", "email", "id"]:
+            if c not in df_dep.columns:
+                df_dep[c] = None
 
-# Mantemos a tabela para inspeção geral e CSV
-st.markdown("### Tabela de parlamentares")
-st.dataframe(
-    df_dep.rename(columns={
-        "nome": "Nome", "siglaPartido": "Partido", "siglaUf": "UF", "email": "E-mail"
-    })[["Nome", "Partido", "UF", "E-mail"]],
-    use_container_width=True,
-)
-csv_dep = df_dep[["nome", "siglaPartido", "siglaUf", "email", "id"]].rename(
-    columns={"nome": "Nome", "siglaPartido": "Partido", "siglaUf": "UF", "email": "E-mail", "id": "ID"}
-).to_csv(index=False).encode("utf-8")
-st.download_button("⬇️ Baixar CSV (deputados)", data=csv_dep, file_name="deputados.csv", mime="text/csv")
+        st.markdown("### Tabela de parlamentares")
+        st.dataframe(
+            df_dep.rename(columns={
+                "nome": "Nome", "siglaPartido": "Partido", "siglaUf": "UF", "email": "E-mail"
+            })[["Nome", "Partido", "UF", "E-mail"]],
+            use_container_width=True,
+        )
+        csv_dep = df_dep[["nome", "siglaPartido", "siglaUf", "email", "id"]].rename(
+            columns={"nome": "Nome", "siglaPartido": "Partido", "siglaUf": "UF", "email": "E-mail", "id": "ID"}
+        ).to_csv(index=False).encode("utf-8")
+        st.download_button("⬇️ Baixar CSV (deputados)", data=csv_dep, file_name="deputados.csv", mime="text/csv")
 
-st.markdown("---")
+        st.markdown("---")
         st.markdown("### Detalhes e despesas do parlamentar")
 
         # Seleção do resultado
-opcoes = {
-    f"{d['nome']} — {d.get('siglaPartido','?')}/{d.get('siglaUf','?')} (ID {d['id']})": d['id']
-    for d in resultados
-}
-escolha_rotulo = st.selectbox(
+        opcoes = {
+            f"{d['nome']} — {d.get('siglaPartido','?')}/{d.get('siglaUf','?')} (ID {d['id']})": d['id']
+            for d in resultados
+        }
+        escolha_rotulo = st.selectbox(
+            "Selecione o(a) deputado(a)",
+            options=list(opcoes.keys()),
+            index=0,
+        )
+        dep_id = opcoes.get(escolha_rotulo)
+        st.session_state.dep_id = dep_id
 
         if dep_id:
             detalhes = get_deputado_details(dep_id)
@@ -273,21 +275,18 @@ escolha_rotulo = st.selectbox(
                 )
                 st.write(f"**Telefone:** {telefone or '—'}")
 
-            # Extras em tabela
-            st.markdown("#### Outras informações")
-            info_tabela = {
-                "ID": dep_id,
-                "Nome civil": nome_civil,
-                "Nome eleitoral": nome_eleitoral,
-                "Partido": sigla_partido,
-                "UF": sigla_uf,
-                "Situação": situacao,
-                "Condição eleitoral": condicao,
-            }
-            if st.session_state.get("tabela_compacta", True):
-                st.table({"Campo": list(info_tabela.keys()), "Valor": list(info_tabela.values())})
+            # ---------------- Gráfico: partido do deputado por UF ----------------
+            st.markdown("### Distribuição do partido por UF")
+            if sigla_partido:
+                lista_partido = list_deputados_by_partido(sigla_partido)
+                df_part = pd.DataFrame(lista_partido)
+                if not df_part.empty and "siglaUf" in df_part.columns:
+                    contagem_uf = df_part["siglaUf"].value_counts().sort_index()
+                    st.bar_chart(contagem_uf)
+                else:
+                    st.info("Não foi possível calcular a distribuição por UF para este partido.")
             else:
-                st.json(info_tabela)
+                st.info("Partido não disponível para o(a) deputado(a) selecionado(a).")
 
             # ---------------- Relatório de despesas ----------------
             st.markdown("#### Despesas do deputado")
@@ -338,7 +337,16 @@ escolha_rotulo = st.selectbox(
                     "⬇️ Baixar CSV (despesas)", data=csv_desp, file_name=f"despesas_{dep_id}_{ano}.csv", mime="text/csv"
                 )
 
-            # Link para API
-            if st.session_state.get("mostrar_link_api", True):
-                st.markdown(f"Ver na API: [deputados/{dep_id}]({API_BASE}/deputados/{dep_id})")
-
+            # ---------------- Linha: total de despesas por ano ----------------
+            st.markdown("#### Evolução anual de despesas (valor líquido)")
+            df_anos = get_despesas_por_ano(dep_id, ano_ini=2015)
+            if not df_anos.empty:
+                if HAS_MPL:
+                    fig2, ax2 = plt.subplots()
+                    ax2.plot(df_anos["Ano"], df_anos["TotalLiquido"], marker="o")
+                    ax2.set_xlabel("Ano")
+                    ax2.set_ylabel("Total (R$)")
+                    ax2.grid(True, linestyle=":", alpha=0.5)
+                    st.pyplot(fig2, clear_figure=True)
+                else:
+                    st.line_chart(df_anos.set_index("Ano")["TotalLiquido"])
