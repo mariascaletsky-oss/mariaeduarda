@@ -5,7 +5,7 @@ API_BASE = "https://dadosabertos.camara.leg.br/api/v2"
 HEADERS = {"User-Agent": "Streamlit Busca Deputado/2.0", "Accept": "application/json"}
 
 st.set_page_config(page_title="Buscar Deputado (2 páginas)", page_icon="🔎", layout="wide")
-st.title("🔎 Busca de Deputado – Fluxo em 2 páginas")
+st.title("🔎 Busca de Deputado")
 st.caption("Fonte: API de Dados Abertos da Câmara dos Deputados")
 
 @st.cache_data(ttl=1200)
