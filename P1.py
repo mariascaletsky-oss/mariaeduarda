@@ -56,6 +56,18 @@ def search_deputados_by_name(nome: str):
         st.error(f"Erro ao buscar deputados: {e}")
         return []
 
+@st.cache_data(ttl=1200)
+def list_deputados_by_partido(sigla_partido: str):
+    """Lista deputados em exercício de um partido (sigla)."""
+    params = {"siglaPartido": sigla_partido, "ordem": "ASC", "ordenarPor": "nome", "itens": 100}
+    try:
+        r = requests.get(f"{API_BASE}/deputados", params=params, headers=HEADERS, timeout=30)
+        r.raise_for_status()
+        return r.json().get("dados", [])
+    except requests.RequestException as e:
+        st.error(f"Erro ao buscar partido {sigla_partido}: {e}")
+        return []
+
 @st.cache_data(ttl=1800)
 def get_deputado_details(dep_id: int):
     try:
@@ -93,6 +105,20 @@ def get_despesas(dep_id: int, ano: Optional[int] = None) -> pd.DataFrame:
     except requests.RequestException as e:
         st.error(f"Erro ao buscar despesas: {e}")
         return pd.DataFrame()
+
+@st.cache_data(ttl=900)
+def get_despesas_por_ano(dep_id: int, ano_ini: int = 2015, ano_fim: Optional[int] = None) -> pd.DataFrame:
+    """Agrega despesas por ano (valor líquido) para o deputado selecionado."""
+    if ano_fim is None:
+        ano_fim = datetime.now().year
+    rows = []
+    for ano in range(ano_ini, ano_fim + 1):
+        df = get_despesas(dep_id, ano=ano)
+        total = 0.0
+        if not df.empty:
+            total = pd.to_numeric(df.get("valorLiquido"), errors="coerce").fillna(0).sum()
+        rows.append({"Ano": ano, "TotalLiquido": float(total)})
+    return pd.DataFrame(rows)
 
 # ----------------------
 # Estado global mínimo
@@ -184,70 +210,31 @@ if st.session_state.pagina == "Respostas":
         st.info("Nenhum resultado para exibir. Volte à página **Pesquisa** e faça uma busca.")
     else:
         # ---------------- Visualizações gerais da lista ----------------
-        df_dep = pd.DataFrame(resultados)
-        # Garante colunas principais
-        for c in ["nome", "siglaPartido", "siglaUf", "email", "id"]:
-            if c not in df_dep.columns:
-                df_dep[c] = None
+# (Removemos gráficos globais por UF/Partido; agora os gráficos são específicos
+# ao partido do deputado selecionado e às despesas por ano.)
 
-        # KPIs
-        k1, k2, k3 = st.columns(3)
-        with k1:
-            st.metric("Total de deputados encontrados", len(df_dep))
-        with k2:
-            st.metric("Partidos únicos", int(df_dep["siglaPartido"].nunique()))
-        with k3:
-            st.metric("UFs representadas", int(df_dep["siglaUf"].nunique()))
+# Mantemos a tabela para inspeção geral e CSV
+st.markdown("### Tabela de parlamentares")
+st.dataframe(
+    df_dep.rename(columns={
+        "nome": "Nome", "siglaPartido": "Partido", "siglaUf": "UF", "email": "E-mail"
+    })[["Nome", "Partido", "UF", "E-mail"]],
+    use_container_width=True,
+)
+csv_dep = df_dep[["nome", "siglaPartido", "siglaUf", "email", "id"]].rename(
+    columns={"nome": "Nome", "siglaPartido": "Partido", "siglaUf": "UF", "email": "E-mail", "id": "ID"}
+).to_csv(index=False).encode("utf-8")
+st.download_button("⬇️ Baixar CSV (deputados)", data=csv_dep, file_name="deputados.csv", mime="text/csv")
 
-        # Tabela interativa + CSV
-        st.markdown("### Tabela de parlamentares")
-        st.dataframe(
-            df_dep.rename(columns={
-                "nome": "Nome", "siglaPartido": "Partido", "siglaUf": "UF", "email": "E-mail"
-            })[["Nome", "Partido", "UF", "E-mail"]],
-            use_container_width=True,
-        )
-        csv_dep = df_dep[["nome", "siglaPartido", "siglaUf", "email", "id"]].rename(
-            columns={"nome": "Nome", "siglaPartido": "Partido", "siglaUf": "UF", "email": "E-mail", "id": "ID"}
-        ).to_csv(index=False).encode("utf-8")
-        st.download_button("⬇️ Baixar CSV (deputados)", data=csv_dep, file_name="deputados.csv", mime="text/csv")
-
-        st.markdown("### Gráficos")
-        colg1, colg2 = st.columns(2)
-        with colg1:
-            st.markdown("**Distribuição por UF (barras)**")
-            contagem_uf = df_dep["siglaUf"].value_counts().sort_index()
-            st.bar_chart(contagem_uf)
-        with colg2:
-            st.markdown("**Distribuição por Partido (pizza ou barras)**")
-            dist_partido = df_dep["siglaPartido"].value_counts().sort_values(ascending=False)
-            if not dist_partido.empty:
-                if HAS_MPL:
-                    fig, ax = plt.subplots()
-                    ax.pie(dist_partido.values, labels=dist_partido.index, autopct="%1.1f%")
-                    ax.axis("equal")
-                    st.pyplot(fig, clear_figure=True)
-                else:
-                    st.info("matplotlib não encontrado — exibindo barras como fallback.")
-                    st.bar_chart(dist_partido)
-            else:
-                st.write("Sem dados de partido para exibir.")
-
-        st.markdown("---")
+st.markdown("---")
         st.markdown("### Detalhes e despesas do parlamentar")
 
         # Seleção do resultado
-        opcoes = {
-            f"{d['nome']} — {d.get('siglaPartido','?')}/{d.get('siglaUf','?')} (ID {d['id']})": d['id']
-            for d in resultados
-        }
-        escolha_rotulo = st.selectbox(
-            "Selecione o(a) deputado(a)",
-            options=list(opcoes.keys()),
-            index=0,
-        )
-        dep_id = opcoes.get(escolha_rotulo)
-        st.session_state.dep_id = dep_id
+opcoes = {
+    f"{d['nome']} — {d.get('siglaPartido','?')}/{d.get('siglaUf','?')} (ID {d['id']})": d['id']
+    for d in resultados
+}
+escolha_rotulo = st.selectbox(
 
         if dep_id:
             detalhes = get_deputado_details(dep_id)
@@ -356,4 +343,6 @@ if st.session_state.pagina == "Respostas":
                 st.markdown(f"Ver na API: [deputados/{dep_id}]({API_BASE}/deputados/{dep_id})")
 
 # Rodapé
-st.markdown("\n—\n*App didático. Confira detalhes e metadados na API oficial.*")
+st.markdown("
+—
+*App didático. Confira detalhes e metadados na API oficial.*")
