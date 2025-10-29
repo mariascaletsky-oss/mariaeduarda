@@ -1,8 +1,21 @@
+# app_busca_deputado_paginas.py
+# -*- coding: utf-8 -*-
+"""
+App Streamlit com **duas páginas** e **sidebar de opções**:
+- Página 1: PESQUISA → usuário digita o nome e executa a busca
+- Página 2: RESPOSTAS → lista resultados e exibe detalhes; possui botão "⬅ Voltar à Pesquisa"
+- Sidebar (em ambas as páginas): opções de exibição (tabela compacta / link para API)
+
+Como rodar:
+  pip install streamlit requests
+  streamlit run app_busca_deputado_paginas.py
+"""
+
 import requests
 import streamlit as st
 
 API_BASE = "https://dadosabertos.camara.leg.br/api/v2"
-HEADERS = {"User-Agent": "Streamlit Busca Deputado/2.0", "Accept": "application/json"}
+HEADERS = {"User-Agent": "Streamlit Busca Deputado/2.1", "Accept": "application/json"}
 
 st.set_page_config(page_title="Buscar Deputado (2 páginas)", page_icon="🔎", layout="wide")
 st.title("🔎 Busca de Deputado")
@@ -30,7 +43,9 @@ def get_deputado_details(dep_id: int):
         st.error(f"Erro ao buscar detalhes do deputado: {e}")
         return {}
 
+# ----------------------
 # Estado global mínimo
+# ----------------------
 for key, default in {
     "pagina": "Pesquisa",
     "nome_query": "",
@@ -42,7 +57,32 @@ for key, default in {
     if key not in st.session_state:
         st.session_state[key] = default
 
-# Seletor de página (topo)
+# ----------------------
+# SIDEBAR (opções persistentes)
+# ----------------------
+with st.sidebar:
+    st.header("Opções de exibição")
+    st.session_state.tabela_compacta = st.checkbox(
+        "Mostrar tabela compacta", value=st.session_state.tabela_compacta
+    )
+    st.session_state.mostrar_link_api = st.checkbox(
+        "Mostrar link para a API", value=st.session_state.mostrar_link_api
+    )
+    st.markdown("---")
+    st.caption("Use o menu abaixo para alternar páginas.")
+    # Também permite trocar de página pela sidebar (opcional)
+    pagina_sidebar = st.radio(
+        "Navegação",
+        options=["Pesquisa", "Respostas"],
+        index=0 if st.session_state.pagina == "Pesquisa" else 1,
+    )
+    if pagina_sidebar != st.session_state.pagina:
+        st.session_state.pagina = pagina_sidebar
+        st.rerun()
+
+# ----------------------
+# Seletor de página no topo (opcional, pode ocultar se preferir somente a sidebar)
+# ----------------------
 pagina = st.radio(
     "Navegação",
     options=["Pesquisa", "Respostas"],
@@ -50,12 +90,14 @@ pagina = st.radio(
     horizontal=True,
     help="1) Faça a pesquisa; 2) veja os resultados/detalhes.",
 )
-st.session_state.pagina = pagina
+if pagina != st.session_state.pagina:
+    st.session_state.pagina = pagina
+    st.rerun()
 
 # --------------------------------------------------
 # PÁGINA 1 — PESQUISA
 # --------------------------------------------------
-if pagina == "Pesquisa":
+if st.session_state.pagina == "Pesquisa":
     st.subheader("Página 1 – Pesquisa")
     with st.form("form_pesquisa"):
         nome_query = st.text_input(
@@ -75,23 +117,15 @@ if pagina == "Pesquisa":
         st.session_state.nome_query = (nome_query or "").strip()
         st.session_state.resultados = search_deputados_by_name(st.session_state.nome_query)
         st.session_state.dep_id = None
-        # navega automaticamente para página de respostas
+        # Navega automaticamente para página de respostas
         st.session_state.pagina = "Respostas"
         st.rerun()
 
-    if limpar:
+    if 'limpar' in locals() and limpar:
         st.session_state.nome_query = ""
         st.session_state.resultados = []
         st.session_state.dep_id = None
         st.info("Campos limpos. Faça nova pesquisa.")
-
-    with st.expander("Preferências de exibição"):
-        st.session_state.tabela_compacta = st.checkbox(
-            "Mostrar tabela compacta", value=st.session_state.tabela_compacta
-        )
-        st.session_state.mostrar_link_api = st.checkbox(
-            "Mostrar link para a API", value=st.session_state.mostrar_link_api
-        )
 
     st.markdown(
         "> Dica: após enviar a busca, você será levado(a) automaticamente à página **Respostas**."
@@ -100,7 +134,14 @@ if pagina == "Pesquisa":
 # --------------------------------------------------
 # PÁGINA 2 — RESPOSTAS
 # --------------------------------------------------
-if pagina == "Respostas":
+if st.session_state.pagina == "Respostas":
+    # Botão seta (voltar)
+    col_back, _ = st.columns([1, 9])
+    with col_back:
+        if st.button("⬅ Voltar à Pesquisa"):
+            st.session_state.pagina = "Pesquisa"
+            st.rerun()
+
     st.subheader("Página 2 – Respostas")
 
     resultados = st.session_state.resultados
