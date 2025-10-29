@@ -342,7 +342,3 @@ escolha_rotulo = st.selectbox(
             if st.session_state.get("mostrar_link_api", True):
                 st.markdown(f"Ver na API: [deputados/{dep_id}]({API_BASE}/deputados/{dep_id})")
 
-# Rodapé
-st.markdown("
-—
-*App didático. Confira detalhes e metadados na API oficial.*")
