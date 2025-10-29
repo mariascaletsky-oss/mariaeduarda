@@ -72,7 +72,7 @@ with st.sidebar:
 # PÁGINA 1 — PESQUISA
 # --------------------------------------------------
 if st.session_state.pagina == "Pesquisa":
-    st.subheader("Página 1 – Pesquisa")
+    st.subheader("Pesquisa:")
     with st.form("form_pesquisa"):
         nome_query = st.text_input(
             "Nome do(a) deputado(a)",
@@ -108,7 +108,7 @@ if st.session_state.pagina == "Pesquisa":
 # --------------------------------------------------
 # PÁGINA 2 — RESPOSTAS
 # --------------------------------------------------
-if st.session_state.pagina == "Respostas":
+if st.session_state.pagina == "Deputado(a) encontrada":
     # Botão seta (voltar)
     col_back, _ = st.columns([1, 9])
     with col_back:
