@@ -125,6 +125,7 @@ for key, default in {
     "dep_id": None,
     "tabela_compacta": True,
     "mostrar_link_api": True,
+    "mostrar_despesas": True,
 }.items():
     if key not in st.session_state:
         st.session_state[key] = default
@@ -134,22 +135,25 @@ for key, default in {
 # ----------------------
 with st.sidebar:
     st.header("Opções de exibição")
-    st.session_state.tabela_compacta = st.checkbox(
-        "Mostrar tabela compacta", value=st.session_state.tabela_compacta
-    )
-    st.session_state.mostrar_link_api = st.checkbox(
-        "Mostrar link para a API", value=st.session_state.mostrar_link_api
-    )
-    st.markdown("---")
-    st.caption("Use o menu abaixo para alternar páginas.")
-    pagina_sidebar = st.radio(
-        "Navegação",
-        options=["Pesquisa", "Respostas"],
-        index=0 if st.session_state.pagina == "Pesquisa" else 1,
-    )
-    if pagina_sidebar != st.session_state.pagina:
-        st.session_state.pagina = pagina_sidebar
-        st.rerun()
+st.session_state.tabela_compacta = st.checkbox(
+    "Mostrar tabela compacta", value=st.session_state.tabela_compacta
+)
+st.session_state.mostrar_link_api = st.checkbox(
+    "Mostrar link para a API", value=st.session_state.mostrar_link_api
+)
+st.session_state.mostrar_despesas = st.checkbox(
+    "Mostrar seção de despesas", value=st.session_state.mostrar_despesas
+)
+st.markdown("---")
+st.caption("Use o menu abaixo para alternar páginas.")
+pagina_sidebar = st.radio(
+    "Navegação",
+    options=["Pesquisa", "Respostas"],
+    index=0 if st.session_state.pagina == "Pesquisa" else 1,
+)
+if pagina_sidebar != st.session_state.pagina:
+    st.session_state.pagina = pagina_sidebar
+    st.rerun()
 
 # --------------------------------------------------
 # PÁGINA 1 — PESQUISA
@@ -289,64 +293,72 @@ if st.session_state.pagina == "Respostas":
                 st.info("Partido não disponível para o(a) deputado(a) selecionado(a).")
 
             # ---------------- Relatório de despesas ----------------
-            st.markdown("#### Despesas do deputado")
-            ano_atual = datetime.now().year
-            ano = st.selectbox(
-                "Ano",
-                options=list(range(2015, ano_atual + 1))[::-1],
-                index=0,
-            )
-            df_desp = get_despesas(dep_id, ano=ano)
+if st.session_state.get("mostrar_despesas", True):
+    st.markdown("#### Despesas do deputado")
+    ano_atual = datetime.now().year
+    ano = st.selectbox(
+        "Ano",
+        options=list(range(2015, ano_atual + 1))[::-1],
+        index=0,
+    )
+    df_desp = get_despesas(dep_id, ano=ano)
 
-            if df_desp.empty:
-                st.info("Nenhuma despesa encontrada para os filtros selecionados.")
-            else:
-                # Normaliza colunas chave
-                cols_keep = [
-                    "ano","mes","dataDocumento","descricaoTipoDespesa","tipoDespesa","nomeFornecedor",
-                    "cnpjCpfFornecedor","valorDocumento","valorLiquido","urlDocumento"
-                ]
-                for c in cols_keep:
-                    if c not in df_desp.columns:
-                        df_desp[c] = None
+    if df_desp.empty:
+        st.info("Nenhuma despesa encontrada para os filtros selecionados.")
+    else:
+        # Normaliza colunas chave
+        cols_keep = [
+            "ano","mes","dataDocumento","descricaoTipoDespesa","tipoDespesa","nomeFornecedor",
+            "cnpjCpfFornecedor","valorDocumento","valorLiquido","urlDocumento"
+        ]
+        for c in cols_keep:
+            if c not in df_desp.columns:
+                df_desp[c] = None
 
-                # Filtro por tipo (usando descricaoTipoDespesa)
-                tipos = sorted(df_desp["descricaoTipoDespesa"].dropna().unique().tolist())
-                tipo_escolhido = st.selectbox("Tipo de despesa (opcional)", options=[""] + tipos, index=0)
-                if tipo_escolhido:
-                    df_desp = df_desp[df_desp["descricaoTipoDespesa"].fillna("") == tipo_escolhido]
+        # Filtro por tipo (usando descricaoTipoDespesa)
+        tipos = sorted(df_desp["descricaoTipoDespesa"].dropna().unique().tolist())
+        tipo_escolhido = st.selectbox("Tipo de despesa (opcional)", options=[""] + tipos, index=0)
+        if tipo_escolhido:
+            df_desp = df_desp[df_desp["descricaoTipoDespesa"].fillna("") == tipo_escolhido]
 
-                # Ordena por data e mostra
-                df_desp["dataDocumento"] = pd.to_datetime(df_desp["dataDocumento"], errors="coerce")
-                df_view = df_desp[cols_keep].sort_values("dataDocumento", ascending=False).copy()
+        # Ordena por data e mostra
+        df_desp["dataDocumento"] = pd.to_datetime(df_desp["dataDocumento"], errors="coerce")
+        df_view = df_desp[cols_keep].sort_values("dataDocumento", ascending=False).copy()
 
-                # KPIs
-                total_liq = pd.to_numeric(df_view["valorLiquido"], errors="coerce").fillna(0).sum()
-                total_doc = pd.to_numeric(df_view["valorDocumento"], errors="coerce").fillna(0).sum()
-                c1, c2 = st.columns(2)
-                with c1:
-                    st.metric("Total (valor líquido)", f"R$ {total_liq:,.2f}".replace(",","X").replace(".",",").replace("X","."))
-                with c2:
-                    st.metric("Total (valor documento)", f"R$ {total_doc:,.2f}".replace(",","X").replace(".",",").replace("X","."))
+        # KPIs
+        total_liq = pd.to_numeric(df_view["valorLiquido"], errors="coerce").fillna(0).sum()
+        total_doc = pd.to_numeric(df_view["valorDocumento"], errors="coerce").fillna(0).sum()
+        c1, c2 = st.columns(2)
+        with c1:
+            st.metric("Total (valor líquido)", f"R$ {total_liq:,.2f}".replace(",","X").replace(".",",").replace("X","."))
+        with c2:
+            st.metric("Total (valor documento)", f"R$ {total_doc:,.2f}".replace(",","X").replace(".",",").replace("X","."))
 
-                st.dataframe(df_view, use_container_width=True)
+        st.dataframe(df_view, use_container_width=True)
 
-                # CSV
-                csv_desp = df_view.to_csv(index=False).encode("utf-8")
-                st.download_button(
-                    "⬇️ Baixar CSV (despesas)", data=csv_desp, file_name=f"despesas_{dep_id}_{ano}.csv", mime="text/csv"
+        # CSV
+        csv_desp = df_view.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            "⬇️ Baixar CSV (despesas)", data=csv_desp, file_name=f"despesas_{dep_id}_{ano}.csv", mime="text/csv"
+        )", data=csv_desp, file_name=f"despesas_{dep_id}_{ano}.csv", mime="text/csv"
                 )
 
             # ---------------- Linha: total de despesas por ano ----------------
-            st.markdown("#### Evolução anual de despesas (valor líquido)")
-            df_anos = get_despesas_por_ano(dep_id, ano_ini=2015)
-            if not df_anos.empty:
-                if HAS_MPL:
-                    fig2, ax2 = plt.subplots()
-                    ax2.plot(df_anos["Ano"], df_anos["TotalLiquido"], marker="o")
-                    ax2.set_xlabel("Ano")
-                    ax2.set_ylabel("Total (R$)")
-                    ax2.grid(True, linestyle=":", alpha=0.5)
-                    st.pyplot(fig2, clear_figure=True)
-                else:
-                    st.line_chart(df_anos.set_index("Ano")["TotalLiquido"])
+if st.session_state.get("mostrar_despesas", True):
+    st.markdown("#### Evolução anual de despesas (valor líquido)")
+    df_anos = get_despesas_por_ano(dep_id, ano_ini=2015)
+    if not df_anos.empty:
+        # Filtra anos sem informação (TotalLiquido <= 0 ou NaN)
+        df_anos = df_anos[pd.to_numeric(df_anos["TotalLiquido"], errors="coerce").fillna(0) > 0]
+    if df_anos.empty:
+        st.info("Sem dados de despesas por ano para exibir.")
+    else:
+        if HAS_MPL:
+            fig2, ax2 = plt.subplots()
+            ax2.plot(df_anos["Ano"], df_anos["TotalLiquido"], marker="o")
+            ax2.set_xlabel("Ano")
+            ax2.set_ylabel("Total (R$)")
+            ax2.grid(True, linestyle=":", alpha=0.5)
+            st.pyplot(fig2, clear_figure=True)
+        else:
+            st.line_chart(df_anos.set_index("Ano")["TotalLiquido"])
