@@ -1,16 +1,3 @@
-# app_busca_deputado_paginas.py
-# -*- coding: utf-8 -*-
-"""
-App Streamlit com **duas páginas** e **sidebar de opções**:
-- Página 1: PESQUISA → usuário digita o nome e executa a busca
-- Página 2: RESPOSTAS → lista resultados e exibe detalhes; possui botão "⬅ Voltar à Pesquisa"
-- Sidebar (em ambas as páginas): opções de exibição (tabela compacta / link para API)
-
-Como rodar:
-  pip install streamlit requests
-  streamlit run app_busca_deputado_paginas.py
-"""
-
 import requests
 import streamlit as st
 
@@ -80,19 +67,6 @@ with st.sidebar:
         st.session_state.pagina = pagina_sidebar
         st.rerun()
 
-# ----------------------
-# Seletor de página no topo (opcional, pode ocultar se preferir somente a sidebar)
-# ----------------------
-pagina = st.radio(
-    "Navegação",
-    options=["Pesquisa", "Respostas"],
-    index=0 if st.session_state.pagina == "Pesquisa" else 1,
-    horizontal=True,
-    help="1) Faça a pesquisa; 2) veja os resultados/detalhes.",
-)
-if pagina != st.session_state.pagina:
-    st.session_state.pagina = pagina
-    st.rerun()
 
 # --------------------------------------------------
 # PÁGINA 1 — PESQUISA
