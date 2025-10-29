@@ -1,11 +1,41 @@
+# app_busca_deputado_paginas.py
+# -*- coding: utf-8 -*-
+"""
+App Streamlit com **duas páginas** e **sidebar de opções**:
+- Página 1: PESQUISA → usuário digita o nome e executa a busca
+- Página 2: RESPOSTAS → lista resultados, gráficos/tabelas e exibe detalhes; possui botão "⬅ Voltar à Pesquisa"
+- Sidebar (em ambas as páginas): opções de exibição (tabela compacta / link para API)
+
+Gráficos e relatórios gerados
+- Gráfico de barras por UF (nº de deputados em exercício por unidade federativa)
+- Gráfico de setores (pizza) com a distribuição dos deputados por partido (usa matplotlib **se disponível**; caso contrário, mostra barras como fallback)
+- Tabela interativa (nome, partido, UF, e e-mail) + download CSV
+- Relatório detalhado de **despesas por deputado**, com **filtros por ano e tipo de gasto** e **exportação CSV**
+
+Como rodar (com pizza usando matplotlib):
+  pip install streamlit requests pandas matplotlib
+
+Como rodar (sem matplotlib – o app funciona, mas a pizza vira barras):
+  pip install streamlit requests pandas
+
+  streamlit run app_busca_deputado_paginas.py
+"""
+
 import requests
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 from datetime import datetime
+from typing import Optional
+
+# matplotlib é opcional — se não houver, fazemos fallback para barras
+try:
+    import matplotlib.pyplot as plt  # type: ignore
+    HAS_MPL = True
+except Exception:
+    HAS_MPL = False
 
 API_BASE = "https://dadosabertos.camara.leg.br/api/v2"
-HEADERS = {"User-Agent": "Streamlit Busca Deputado/2.3", "Accept": "application/json"}
+HEADERS = {"User-Agent": "Streamlit Busca Deputado/2.4", "Accept": "application/json"}
 
 st.set_page_config(page_title="Buscar Deputado (2 páginas)", page_icon="🔎", layout="wide")
 st.title("🔎 Busca de Deputado")
@@ -37,15 +67,15 @@ def get_deputado_details(dep_id: int):
         return {}
 
 @st.cache_data(ttl=600)
-def get_despesas(dep_id: int, ano: int | None = None) -> pd.DataFrame:
+def get_despesas(dep_id: int, ano: Optional[int] = None) -> pd.DataFrame:
     """Busca despesas do deputado e retorna DataFrame."""
     url = f"{API_BASE}/deputados/{dep_id}/despesas"
     params = {"ordem": "DESC", "ordenarPor": "dataDocumento"}
-    if ano:
+    if ano is not None:
         params["ano"] = ano
     try:
         # paginação simples (até 50 páginas por segurança)
-        dados_total = []
+        dados_total: list[dict] = []
         pagina = 1
         for _ in range(50):
             params.update({"pagina": pagina, "itens": 100})
@@ -189,13 +219,17 @@ if st.session_state.pagina == "Respostas":
             contagem_uf = df_dep["siglaUf"].value_counts().sort_index()
             st.bar_chart(contagem_uf)
         with colg2:
-            st.markdown("**Distribuição por Partido (pizza)**")
+            st.markdown("**Distribuição por Partido (pizza ou barras)**")
             dist_partido = df_dep["siglaPartido"].value_counts().sort_values(ascending=False)
             if not dist_partido.empty:
-                fig, ax = plt.subplots()
-                ax.pie(dist_partido.values, labels=dist_partido.index, autopct="%1.1f%")
-                ax.axis("equal")
-                st.pyplot(fig, clear_figure=True)
+                if HAS_MPL:
+                    fig, ax = plt.subplots()
+                    ax.pie(dist_partido.values, labels=dist_partido.index, autopct="%1.1f%")
+                    ax.axis("equal")
+                    st.pyplot(fig, clear_figure=True)
+                else:
+                    st.info("matplotlib não encontrado — exibindo barras como fallback.")
+                    st.bar_chart(dist_partido)
             else:
                 st.write("Sem dados de partido para exibir.")
 
