@@ -287,11 +287,7 @@ if st.session_state.pagina == "Respostas":
                         if c not in df_desp.columns:
                             df_desp[c] = None
 
-                    tipos = sorted(df_desp["descricaoTipoDespesa"].dropna().unique().tolist())
-                    tipo_escolhido = st.selectbox("Tipo de despesa (opcional)", options=[""] + tipos, index=0)
-                    if tipo_escolhido:
-                        df_desp = df_desp[df_desp["descricaoTipoDespesa"].fillna("") == tipo_escolhido]
-
+                
                     df_desp["dataDocumento"] = pd.to_datetime(df_desp["dataDocumento"], errors="coerce")
                     df_view = df_desp[cols_keep].sort_values("dataDocumento", ascending=False).copy()
 
