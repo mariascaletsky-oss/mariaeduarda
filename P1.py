@@ -329,5 +329,3 @@ if st.session_state.pagina == "Respostas":
             if st.session_state.get("mostrar_link_api", True):
                 st.markdown(f"Ver na API: [deputados/{dep_id}]({API_BASE}/deputados/{dep_id})")
 
-# Rodapé
-st.markdown("\n—\n*App didático. Confira detalhes e metadados na API oficial.*")
