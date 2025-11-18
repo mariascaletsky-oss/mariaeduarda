@@ -4,7 +4,6 @@ import pandas as pd
 from datetime import datetime
 from typing import Optional
 
-# matplotlib é opcional — se não houver, usamos fallback nativo do Streamlit
 try:
     import matplotlib.pyplot as plt  # type: ignore
     HAS_MPL = True
