@@ -17,16 +17,12 @@ st.set_page_config(page_title="Buscar Deputado (2 páginas)", page_icon="🔎", 
 st.title("🔎 Busca de Deputado")
 st.caption("Fonte: API de Dados Abertos da Câmara dos Deputados")
 
-# ----------------------
-# Funções de API
-# ----------------------
 @st.cache_data(ttl=1200)
 def search_deputados_by_name(nome: str):
     params = {"nome": nome, "ordem": "ASC", "ordenarPor": "nome", "itens": 100}
     r = requests.get(f"{API_BASE}/deputados", params=params, headers=HEADERS, timeout=30)
     r.raise_for_status()
     return r.json().get("dados", [])
-
 
 @st.cache_data(ttl=1200)
 def list_deputados_by_partido(sigla_partido: str):
@@ -84,10 +80,6 @@ def get_despesas_por_ano(dep_id: int, ano_ini: int = 2015, ano_fim: Optional[int
         rows.append({"Ano": ano, "TotalLiquido": float(total)})
     return pd.DataFrame(rows)
 
-
-# ----------------------
-# Estado global mínimo
-# ----------------------
 for key, default in {
     "pagina": "Pesquisa",
     "nome_query": "",
@@ -100,9 +92,6 @@ for key, default in {
     if key not in st.session_state:
         st.session_state[key] = default
 
-# ----------------------
-# SIDEBAR (opções persistentes)
-# ----------------------
 with st.sidebar:
     st.header("Opções de exibição")
     # Mantemos a opção de mostrar tabela, mas por padrão NÃO mostramos a tabela de resultados
@@ -127,9 +116,6 @@ with st.sidebar:
         st.session_state.pagina = pagina_sidebar
         st.rerun()
 
-# --------------------------------------------------
-# PÁGINA 1 — PESQUISA
-# --------------------------------------------------
 if st.session_state.pagina == "Pesquisa":
     st.subheader("Pesquisa")
     with st.form("form_pesquisa"):
@@ -164,9 +150,6 @@ if st.session_state.pagina == "Pesquisa":
 
     st.markdown("> Dica: após enviar a busca, você será levado(a) automaticamente à página **Respostas**.")
 
-# --------------------------------------------------
-# PÁGINA 2 — RESPOSTAS
-# --------------------------------------------------
 if st.session_state.pagina == "Respostas":
     # Botão seta (voltar)
     cb, _ = st.columns([1, 9])
@@ -262,7 +245,7 @@ if st.session_state.pagina == "Respostas":
                 st.write(f"**Gabinete:** {nome_gab or '—'} • Prédio {predio or '—'}, sala {sala or '—'}, andar {andar or '—'}")
                 st.write(f"**Telefone:** {telefone or '—'}")
 
-            # --- Gráfico: partido do deputado por UF ---
+            
             st.markdown("### Distribuição do partido por UF")
             if sigla_partido:
                 try:
@@ -278,7 +261,7 @@ if st.session_state.pagina == "Respostas":
             else:
                 st.info("Partido não disponível para o(a) deputado(a) selecionado(a).")
 
-            # --- Seção de despesas (opcional via sidebar) ---
+            
             if st.session_state.get("mostrar_despesas", True):
                 st.markdown("#### Despesas do deputado")
                 ano_atual = datetime.now().year
